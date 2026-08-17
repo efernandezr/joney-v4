@@ -12,6 +12,7 @@ import { IconMenu2 } from "@tabler/icons-react";
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router";
 
+import { ArtifactPreviewPanel } from "@/components/preview/ArtifactPreviewPanel";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -161,6 +162,7 @@ export function Layout({ children }: LayoutProps) {
         {isChatRoute ? (
           <div className="agent-layout-main-surface flex min-w-0 flex-1 overflow-hidden">
             {contentFrame}
+            <ArtifactPreviewPanel />
           </div>
         ) : (
           <AgentSidebar

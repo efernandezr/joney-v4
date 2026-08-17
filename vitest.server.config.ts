@@ -17,7 +17,7 @@ export default mergeConfig(
     },
     test: {
       environment: "node",
-      include: ["tests/**/*.test.ts"],
+      include: ["tests/**/*.test.{ts,tsx}"],
     },
   }),
 );
