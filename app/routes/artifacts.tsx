@@ -1,7 +1,6 @@
 import { useResources } from "@agent-native/core/client/resources";
 import { useNavigate } from "react-router";
 
-import { ArtifactPreviewPanel } from "@/components/preview/ArtifactPreviewPanel";
 import { useArtifactPreview } from "@/components/preview/use-artifact-preview";
 import { Button } from "@/components/ui/button";
 
@@ -28,7 +27,7 @@ function formatSize(bytes: number) {
 }
 
 export default function ArtifactsRoute() {
-  const artifacts = useResources("workspace");
+  const artifacts = useResources("all");
   const { open } = useArtifactPreview();
   const navigate = useNavigate();
 
@@ -78,7 +77,6 @@ export default function ArtifactsRoute() {
           ))}
         </ul>
       )}
-      <ArtifactPreviewPanel />
     </div>
   );
 }

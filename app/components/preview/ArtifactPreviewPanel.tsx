@@ -14,7 +14,7 @@ const MAX_INLINE_BYTES = 1024 * 1024;
 export function ArtifactPreviewPanel() {
   const { preview, open, close } = useArtifactPreview();
   const resource = useResource(preview?.resourceId ?? null);
-  const artifacts = useResources("workspace");
+  const artifacts = useResources("all");
 
   if (!preview) return null;
 
