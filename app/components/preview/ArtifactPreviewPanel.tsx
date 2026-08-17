@@ -7,6 +7,7 @@ import { IconDownload, IconX } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
 
+import { selectHtmlArtifacts } from "./artifact-list";
 import { useArtifactPreview } from "./use-artifact-preview";
 
 const MAX_INLINE_BYTES = 1024 * 1024;
@@ -16,11 +17,9 @@ export function ArtifactPreviewPanel() {
   const resource = useResource(preview?.resourceId ?? null);
   const artifacts = useResources("all");
 
-  if (!preview) return null;
+  if (!preview?.resourceId || !preview?.path) return null;
 
-  const htmlArtifacts = (artifacts.data ?? []).filter(
-    (r) => r.path?.startsWith("artifacts/") && r.mimeType === "text/html",
-  );
+  const htmlArtifacts = selectHtmlArtifacts(artifacts.data);
 
   return (
     <aside className="flex w-[45%] min-w-[320px] shrink-0 flex-col border-l border-border bg-card">

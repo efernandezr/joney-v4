@@ -1,6 +1,8 @@
 import { useResources } from "@agent-native/core/client/resources";
 import { useNavigate } from "react-router";
+import { toast } from "sonner";
 
+import { selectHtmlArtifacts } from "@/components/preview/artifact-list";
 import { useArtifactPreview } from "@/components/preview/use-artifact-preview";
 import { Button } from "@/components/ui/button";
 
@@ -31,15 +33,15 @@ export default function ArtifactsRoute() {
   const { open } = useArtifactPreview();
   const navigate = useNavigate();
 
-  const htmlArtifacts = (artifacts.data ?? [])
-    .filter(
-      (r) => r.path?.startsWith("artifacts/") && r.mimeType === "text/html",
-    )
-    .sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
+  const htmlArtifacts = selectHtmlArtifacts(artifacts.data);
 
   async function previewArtifact(resourceId: string, path: string) {
-    await open({ resourceId, path });
-    navigate("/");
+    try {
+      await open({ resourceId, path });
+      navigate("/");
+    } catch {
+      toast.error("Couldn't open the preview");
+    }
   }
 
   return (

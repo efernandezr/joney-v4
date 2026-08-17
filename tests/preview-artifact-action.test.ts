@@ -1,4 +1,4 @@
-import { readAppState, writeAppState } from "@agent-native/core/application-state";
+import { deleteAppState, readAppState } from "@agent-native/core/application-state";
 import { resourcePut, WORKSPACE_OWNER } from "@agent-native/core/resources/store";
 import { runWithRequestContext } from "@agent-native/core/server";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -8,7 +8,7 @@ import previewArtifact from "../actions/preview-artifact";
 describe("preview-artifact action", () => {
   beforeEach(async () => {
     await runWithRequestContext({ userEmail: "test@example.com" }, async () => {
-      await writeAppState("artifact-preview", {});
+      await deleteAppState("artifact-preview");
     });
   });
 

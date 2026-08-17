@@ -18,6 +18,12 @@ export default mergeConfig(
     test: {
       environment: "node",
       include: ["tests/**/*.test.{ts,tsx}"],
+      env: {
+        // Isolate server tests from the running app's dev database
+        // (file:./data/app.db). The framework auto-creates and self-migrates
+        // SQLite files on first use, so this file needs no manual setup.
+        DATABASE_URL: "file:./data/vitest.db",
+      },
     },
   }),
 );

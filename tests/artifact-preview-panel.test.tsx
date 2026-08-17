@@ -1,14 +1,16 @@
 // tests/artifact-preview-panel.test.tsx
 // @vitest-environment jsdom
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+const readClientAppStateMock = vi.fn(async () => ({
+  resourceId: "res-1",
+  path: "artifacts/test.html",
+}));
+
 vi.mock("@agent-native/core/client/application-state", () => ({
-  readClientAppState: vi.fn(async () => ({
-    resourceId: "res-1",
-    path: "artifacts/test.html",
-  })),
+  readClientAppState: (...args: unknown[]) => readClientAppStateMock(...args),
   setClientAppState: vi.fn(async () => null),
 }));
 
@@ -66,5 +68,22 @@ describe("ArtifactPreviewPanel", () => {
     expect(await screen.findByText(/couldn't load/i)).toBeTruthy();
     (await screen.findByRole("button", { name: /retry/i })).click();
     expect(refetch).toHaveBeenCalled();
+  });
+
+  it("renders nothing when app state is malformed (empty object)", async () => {
+    readClientAppStateMock.mockResolvedValueOnce({} as never);
+    useResourceMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+    });
+    const { container } = renderPanel();
+    await waitFor(() => {
+      expect(readClientAppStateMock).toHaveBeenCalled();
+    });
+    await waitFor(() => {
+      expect(container.firstChild).toBeNull();
+    });
+    expect(container.querySelector("iframe")).toBeNull();
   });
 });
