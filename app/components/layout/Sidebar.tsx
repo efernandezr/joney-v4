@@ -14,6 +14,7 @@ import {
   type ChatHistoryItem,
 } from "@agent-native/toolkit/chat-history";
 import {
+  IconFileCode,
   IconLayoutSidebarLeftCollapse,
   IconLayoutSidebarLeftExpand,
   IconMessageCircle,
@@ -38,6 +39,12 @@ const navItems = [
     labelKey: "navigation.chat",
     href: "/",
     view: "chat",
+  },
+  {
+    icon: IconFileCode,
+    labelKey: "navigation.artifacts",
+    href: "/artifacts",
+    view: "artifacts",
   },
 ];
 

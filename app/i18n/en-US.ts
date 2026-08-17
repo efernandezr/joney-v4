@@ -40,6 +40,7 @@ const messages = {
     unpinChat: "Unpin Chat",
   },
   navigation: {
+    artifacts: "Artifacts",
     chat: "Chat",
     collapseSidebar: "Collapse Sidebar",
     database: "Database",
