@@ -7,13 +7,13 @@ import previewArtifact from "../actions/preview-artifact";
 
 describe("preview-artifact action", () => {
   beforeEach(async () => {
-    await runWithRequestContext({}, async () => {
+    await runWithRequestContext({ userEmail: "test@example.com" }, async () => {
       await writeAppState("artifact-preview", null);
     });
   });
 
   it("writes the artifact-preview app state and returns the path", async () => {
-    await runWithRequestContext({}, async () => {
+    await runWithRequestContext({ userEmail: "test@example.com" }, async () => {
       const resource = await resourcePut(
         WORKSPACE_OWNER,
         "artifacts/test-page.html",
@@ -35,7 +35,7 @@ describe("preview-artifact action", () => {
   });
 
   it("rejects a missing resource", async () => {
-    await runWithRequestContext({}, async () => {
+    await runWithRequestContext({ userEmail: "test@example.com" }, async () => {
       await expect(
         previewArtifact.run({ resourceId: "does-not-exist" }),
       ).rejects.toThrow(/not found/i);
@@ -43,7 +43,7 @@ describe("preview-artifact action", () => {
   });
 
   it("rejects non-HTML resources", async () => {
-    await runWithRequestContext({}, async () => {
+    await runWithRequestContext({ userEmail: "test@example.com" }, async () => {
       const resource = await resourcePut(
         WORKSPACE_OWNER,
         "artifacts/notes.md",
