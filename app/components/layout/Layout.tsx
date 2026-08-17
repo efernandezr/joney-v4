@@ -162,7 +162,7 @@ export function Layout({ children }: LayoutProps) {
         {isChatRoute ? (
           <div className="agent-layout-main-surface flex min-w-0 flex-1 overflow-hidden">
             {contentFrame}
-            <ArtifactPreviewPanel />
+            <ArtifactPreviewPanel scope="chat" />
           </div>
         ) : (
           <AgentSidebar

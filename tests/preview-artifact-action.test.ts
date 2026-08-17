@@ -56,4 +56,39 @@ describe("preview-artifact action", () => {
       ).rejects.toThrow(/Only HTML artifacts/i);
     });
   });
+
+  it("stores the calling agent's threadId in the preview state", async () => {
+    await runWithRequestContext({ userEmail: "test@example.com" }, async () => {
+      const resource = await resourcePut(
+        WORKSPACE_OWNER,
+        "artifacts/threaded.html",
+        "<html><body>t</body></html>",
+        "text/html",
+      );
+      await previewArtifact.run({ resourceId: resource.id }, {
+        caller: "tool",
+        threadId: "thread-123",
+      } as never);
+      const state = (await readAppState("artifact-preview")) as {
+        threadId: string | null;
+      };
+      expect(state.threadId).toBe("thread-123");
+    });
+  });
+
+  it("stores threadId null for non-agent callers", async () => {
+    await runWithRequestContext({ userEmail: "test@example.com" }, async () => {
+      const resource = await resourcePut(
+        WORKSPACE_OWNER,
+        "artifacts/manual.html",
+        "<html><body>m</body></html>",
+        "text/html",
+      );
+      await previewArtifact.run({ resourceId: resource.id });
+      const state = (await readAppState("artifact-preview")) as {
+        threadId: string | null;
+      };
+      expect(state.threadId).toBeNull();
+    });
+  });
 });

@@ -12,12 +12,19 @@ import { useArtifactPreview } from "./use-artifact-preview";
 
 const MAX_INLINE_BYTES = 1024 * 1024;
 
-export function ArtifactPreviewPanel() {
-  const { preview, open, close } = useArtifactPreview();
+export function ArtifactPreviewPanel({
+  scope,
+}: {
+  scope: "chat" | "page";
+}) {
+  const { preview, activeThreadId, open, close } = useArtifactPreview();
   const resource = useResource(preview?.resourceId ?? null);
   const artifacts = useResources("all");
 
   if (!preview?.resourceId || !preview?.path) return null;
+  if (!("threadId" in preview)) return null; // pre-scoping legacy value
+  if (scope === "chat" && preview.threadId !== activeThreadId) return null;
+  if (scope === "page" && preview.threadId !== null) return null;
 
   const htmlArtifacts = selectHtmlArtifacts(artifacts.data);
 
@@ -33,7 +40,12 @@ export function ArtifactPreviewPanel() {
               const next = htmlArtifacts.find(
                 (r) => r.id === event.target.value,
               );
-              if (next) void open({ resourceId: next.id, path: next.path });
+              if (next)
+                void open({
+                  resourceId: next.id,
+                  path: next.path,
+                  threadId: preview.threadId,
+                });
             }}
           >
             {htmlArtifacts.map((r) => (

@@ -2,11 +2,12 @@
 // @vitest-environment jsdom
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const readClientAppStateMock = vi.fn(async () => ({
   resourceId: "res-1",
   path: "artifacts/test.html",
+  threadId: "t-1",
 }));
 
 vi.mock("@agent-native/core/client/application-state", () => ({
@@ -21,20 +22,30 @@ vi.mock("@agent-native/core/client/resources", () => ({
   resourceDownloadUrl: (id: string) => `/download/${id}`,
 }));
 
+vi.mock("react-router", () => ({ useParams: () => ({ threadId: "t-1" }) }));
+
 import { ArtifactPreviewPanel } from "../app/components/preview/ArtifactPreviewPanel";
 
-function renderPanel() {
+function renderPanel(scope: "chat" | "page" = "chat") {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
   return render(
     <QueryClientProvider client={qc}>
-      <ArtifactPreviewPanel />
+      <ArtifactPreviewPanel scope={scope} />
     </QueryClientProvider>,
   );
 }
 
 describe("ArtifactPreviewPanel", () => {
+  beforeEach(() => {
+    // Clear call history (not implementations/return values) so a
+    // waitFor(() => expect(mock).toHaveBeenCalledWith(...)) in one test can't
+    // pass immediately on leftover calls recorded by a previous test.
+    useResourceMock.mockClear();
+    readClientAppStateMock.mockClear();
+  });
+
   it("renders the artifact in a sandboxed iframe without allow-same-origin", async () => {
     useResourceMock.mockReturnValue({
       data: {
@@ -85,5 +96,71 @@ describe("ArtifactPreviewPanel", () => {
       expect(container.firstChild).toBeNull();
     });
     expect(container.querySelector("iframe")).toBeNull();
+  });
+
+  it("hides a chat-scoped preview when another conversation is active", async () => {
+    readClientAppStateMock.mockResolvedValueOnce({
+      resourceId: "res-1",
+      path: "artifacts/test.html",
+      threadId: "t-2",
+    });
+    useResourceMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+    });
+    const { container } = renderPanel("chat");
+    // Synchronize on the settled preview state (useResource is called with
+    // the resolved resourceId on the same render pass that then evaluates
+    // the scoping guards), not just on the app-state fetch having started —
+    // otherwise this assertion could pass on the pre-resolution render.
+    await waitFor(() => {
+      expect(useResourceMock).toHaveBeenCalledWith("res-1");
+    });
+    expect(container.firstChild).toBeNull();
+    expect(container.querySelector("iframe")).toBeNull();
+  });
+
+  it("hides page-scoped previews in chat scope", async () => {
+    readClientAppStateMock.mockResolvedValueOnce({
+      resourceId: "res-1",
+      path: "artifacts/test.html",
+      threadId: null,
+    });
+    useResourceMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+    });
+    const { container } = renderPanel("chat");
+    await waitFor(() => {
+      expect(useResourceMock).toHaveBeenCalledWith("res-1");
+    });
+    expect(container.firstChild).toBeNull();
+    expect(container.querySelector("iframe")).toBeNull();
+  });
+
+  it("shows page-scoped previews in page scope", async () => {
+    readClientAppStateMock.mockResolvedValueOnce({
+      resourceId: "res-1",
+      path: "artifacts/test.html",
+      threadId: null,
+    });
+    useResourceMock.mockReturnValue({
+      data: {
+        id: "res-1",
+        path: "artifacts/test.html",
+        content: "<html><body>hello</body></html>",
+        mimeType: "text/html",
+        size: 30,
+      },
+      isLoading: false,
+      isError: false,
+    });
+    renderPanel("page");
+    const iframe = (await screen.findByTitle(
+      "artifacts/test.html",
+    )) as HTMLIFrameElement;
+    expect(iframe.getAttribute("srcdoc")).toContain("hello");
   });
 });

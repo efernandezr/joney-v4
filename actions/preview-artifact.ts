@@ -16,7 +16,7 @@ export default defineAction({
     resourceId: z.string().describe("ID of the text/html resource to preview"),
   }),
   http: false,
-  run: async ({ resourceId }) => {
+  run: async ({ resourceId }, ctx) => {
     const resource = await resourceGet(resourceId);
     if (!resource) {
       throw new Error(`Artifact not found: ${resourceId}`);
@@ -29,6 +29,10 @@ export default defineAction({
     await writeAppState("artifact-preview", {
       resourceId: resource.id,
       path: resource.path,
+      // Agent tool calls carry the conversation id; UI/HTTP callers don't.
+      // The chat panel scopes previews to this conversation; null renders
+      // on the Artifacts page instead.
+      threadId: ctx?.threadId ?? null,
     });
     return { opened: true as const, path: resource.path };
   },
