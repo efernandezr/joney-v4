@@ -1,0 +1,19 @@
+diff --git a/dist/action.js b/dist/action.js
+index bc89881c0b6dd98ede11663ce4cfed215684f09a..e192bbd242d69345b8f1a2d816a20ada83851142 100644
+--- a/dist/action.js
++++ b/dist/action.js
+@@ -345,6 +345,14 @@ function stripUnsupportedSchemaKeywords(node) {
+         return node;
+     const obj = node;
+     delete obj.propertyNames;
++    // OpenAI's structured-output validator rejects regex lookarounds in
++    // `pattern` (400: "regex lookaround is not supported"); Zod v4 emits them
++    // for z.string().email(). Anthropic ignores `pattern`, so dropping only
++    // the unsupported ones keeps action schemas portable; `format` remains
++    // and runtime Zod validation still enforces the real constraint.
++    if (typeof obj.pattern === "string" && /\(\?<?[=!]/.test(obj.pattern)) {
++        delete obj.pattern;
++    }
+     for (const key of SUBSCHEMA_VALUE_KEYS) {
+         // `items`/`additionalItems` may also be an array of subschemas.
+         const value = obj[key];
