@@ -8,7 +8,7 @@ import previewArtifact from "../actions/preview-artifact";
 describe("preview-artifact action", () => {
   beforeEach(async () => {
     await runWithRequestContext({ userEmail: "test@example.com" }, async () => {
-      await writeAppState("artifact-preview", null);
+      await writeAppState("artifact-preview", {});
     });
   });
 
@@ -24,9 +24,10 @@ describe("preview-artifact action", () => {
       const result = await previewArtifact.run({ resourceId: resource.id });
 
       expect(result).toEqual({ opened: true, path: "artifacts/test-page.html" });
-      const state = await readAppState<{ resourceId: string; path: string }>(
-        "artifact-preview",
-      );
+      const state = (await readAppState("artifact-preview")) as {
+        resourceId: string;
+        path: string;
+      } | null;
       expect(state).toMatchObject({
         resourceId: resource.id,
         path: "artifacts/test-page.html",
