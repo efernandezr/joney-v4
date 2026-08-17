@@ -12,6 +12,9 @@ export default createAgentChatPlugin({
   appId: "joney-ai",
   actions: loadActionsFromStaticRegistry(actionsRegistry),
   initialToolNames: INITIAL_TOOL_NAMES,
+  // Let the agent render sandboxed HTML previews inline in chat
+  // (create-extension / render-inline-extension); off by default.
+  frameworkTools: { extensions: true },
   resolveOrgId: async (event) => (await getOrgContext(event)).orgId,
   systemPrompt: `You are the Chat app agent.
 
