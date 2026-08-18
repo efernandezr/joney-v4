@@ -195,6 +195,63 @@ describe("ArtifactPreviewPanel", () => {
     ).toBeNull();
   });
 
+  it("auto-expands when the synced preview's resourceId changes (e.g. the agent opened a new artifact)", async () => {
+    // Regression: a collapsed panel must re-expand when the app-state sync
+    // brings in a different resourceId than the one last seen, but must NOT
+    // force-expand on the very first observed preview (that would fight a
+    // deliberately collapsed panel on page load).
+    window.localStorage.setItem("artifact-preview-collapsed", "1");
+    readClientAppStateMock.mockResolvedValueOnce({
+      resourceId: "res-1",
+      path: "artifacts/test.html",
+      threadId: "t-1",
+    });
+    useResourceMock.mockReturnValue({
+      data: {
+        id: "res-2",
+        path: "artifacts/test2.html",
+        content: "<html><body>second</body></html>",
+        mimeType: "text/html",
+        size: 30,
+      },
+      isLoading: false,
+      isError: false,
+    });
+
+    const qc = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    render(
+      <QueryClientProvider client={qc}>
+        <ArtifactPreviewPanel scope="chat" />
+      </QueryClientProvider>,
+    );
+
+    // Still collapsed on first load, even though this is the first observed
+    // preview — the guard against forcing an initial expand is doing its
+    // job.
+    const chip = await screen.findByRole("button", { name: /test\.html/ });
+    expect(chip).toBeTruthy();
+    expect(screen.queryByTitle("artifacts/test2.html")).toBeNull();
+
+    // Simulate the agent opening a new artifact server-side: the sync fetch
+    // now resolves a different resourceId.
+    readClientAppStateMock.mockResolvedValueOnce({
+      resourceId: "res-2",
+      path: "artifacts/test2.html",
+      threadId: "t-1",
+    });
+    await qc.invalidateQueries({ queryKey: ["app-state", "artifact-preview"] });
+
+    const iframe = (await screen.findByTitle(
+      "artifacts/test2.html",
+    )) as HTMLIFrameElement;
+    expect(iframe.getAttribute("srcdoc")).toContain("second");
+    expect(
+      window.localStorage.getItem("artifact-preview-collapsed"),
+    ).toBeNull();
+  });
+
   it("renders the artifact in a sandboxed iframe without allow-same-origin", async () => {
     useResourceMock.mockReturnValue({
       data: {

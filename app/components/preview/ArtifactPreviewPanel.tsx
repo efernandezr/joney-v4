@@ -118,7 +118,7 @@ export function ArtifactPreviewPanel({
           type="button"
           variant="ghost"
           size="icon"
-          aria-label="Close preview"
+          aria-label="Collapse preview"
           onClick={collapse}
         >
           <IconX className="size-4" />

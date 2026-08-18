@@ -3,7 +3,7 @@ import {
   setClientAppState,
 } from "@agent-native/core/client/application-state";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 
 import { TAB_ID } from "@/lib/tab-id";
@@ -95,6 +95,21 @@ export function useArtifactPreview() {
       window.removeEventListener("storage", refresh);
     };
   }, []);
+
+  // When the synced preview's resourceId changes (e.g. the agent opened a
+  // new artifact server-side), clear the collapsed flag so the panel
+  // expands to show it. The `lastResourceIdRef.current &&` guard means the
+  // very first observed preview does not force-expand a deliberately
+  // collapsed panel on page load — only a change from one resourceId to
+  // another does.
+  const lastResourceIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    const id = query.data?.resourceId ?? null;
+    if (id && lastResourceIdRef.current && id !== lastResourceIdRef.current) {
+      expand();
+    }
+    if (id) lastResourceIdRef.current = id;
+  }, [query.data?.resourceId]);
 
   function collapse() {
     try {
