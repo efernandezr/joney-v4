@@ -314,3 +314,7 @@ The framework's run finalizer (`dist/server/agent-chat-plugin.js`, search for "N
 ## Verification (definition of done)
 
 All six Task 4 checks pass; new tests lock the scoping rules; no framework files modified outside the managed patch.
+
+## Addendum (post-implementation)
+
+Task 3 shipped two patch hunks, not one: besides the contentless-run finalizer, the client PUT-save path proved to be the actual cause of view-bumps and received a strict no-op skip guard. Both verified (sqlite byte-identical timestamps across views) and approved in the final whole-branch review. Side effect worth knowing: scope-only retags no longer reorder the sidebar either (intended).
