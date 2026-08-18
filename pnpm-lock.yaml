@@ -5,54 +5,54 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@tiptap/starter-kit': 3.28.0
-  '@tiptap/react': 3.28.0
-  '@tiptap/pm': 3.28.0
-  '@tiptap/extensions': 3.28.0
-  '@tiptap/extension-underline': 3.28.0
-  '@tiptap/extension-text-style': 3.28.0
-  '@tiptap/extension-text': 3.28.0
-  '@tiptap/extension-task-list': 3.28.0
-  '@tiptap/extension-task-item': 3.28.0
-  '@tiptap/extension-table-row': 3.28.0
-  '@tiptap/extension-table-header': 3.28.0
-  '@tiptap/extension-table-cell': 3.28.0
-  '@tiptap/extension-table': 3.28.0
-  '@tiptap/extension-strike': 3.28.0
-  '@tiptap/extension-placeholder': 3.28.0
-  '@tiptap/extension-paragraph': 3.28.0
-  '@tiptap/extension-ordered-list': 3.28.0
-  '@tiptap/extension-list-keymap': 3.28.0
-  '@tiptap/extension-list-item': 3.28.0
-  '@tiptap/extension-list': 3.28.0
-  '@tiptap/extension-link': 3.28.0
-  '@tiptap/extension-italic': 3.28.0
-  '@tiptap/extension-image': 3.28.0
-  '@tiptap/extension-horizontal-rule': 3.28.0
-  '@tiptap/extension-heading': 3.28.0
-  '@tiptap/extension-hard-break': 3.28.0
-  '@tiptap/extension-gapcursor': 3.28.0
-  '@tiptap/extension-floating-menu': 3.28.0
-  '@tiptap/extension-dropcursor': 3.28.0
-  '@tiptap/extension-document': 3.28.0
-  '@tiptap/extension-color': 3.28.0
-  '@tiptap/extension-collaboration-caret': 3.28.0
-  '@tiptap/extension-collaboration': 3.28.0
-  '@tiptap/extension-code-block-lowlight': 3.28.0
-  '@tiptap/extension-code-block': 3.28.0
-  '@tiptap/extension-code': 3.28.0
-  '@tiptap/extension-bullet-list': 3.28.0
-  '@tiptap/extension-bubble-menu': 3.28.0
-  '@tiptap/extension-bold': 3.28.0
-  '@tiptap/extension-blockquote': 3.28.0
-  '@tiptap/core': 3.28.0
-  nf3: 0.3.17
-  '@assistant-ui/tap': ^0.5.14
   '@assistant-ui/store': '>=0.2.9 <0.2.14'
+  '@assistant-ui/tap': ^0.5.14
+  '@tiptap/core': 3.28.0
+  '@tiptap/extension-blockquote': 3.28.0
+  '@tiptap/extension-bold': 3.28.0
+  '@tiptap/extension-bubble-menu': 3.28.0
+  '@tiptap/extension-bullet-list': 3.28.0
+  '@tiptap/extension-code': 3.28.0
+  '@tiptap/extension-code-block': 3.28.0
+  '@tiptap/extension-code-block-lowlight': 3.28.0
+  '@tiptap/extension-collaboration': 3.28.0
+  '@tiptap/extension-collaboration-caret': 3.28.0
+  '@tiptap/extension-color': 3.28.0
+  '@tiptap/extension-document': 3.28.0
+  '@tiptap/extension-dropcursor': 3.28.0
+  '@tiptap/extension-floating-menu': 3.28.0
+  '@tiptap/extension-gapcursor': 3.28.0
+  '@tiptap/extension-hard-break': 3.28.0
+  '@tiptap/extension-heading': 3.28.0
+  '@tiptap/extension-horizontal-rule': 3.28.0
+  '@tiptap/extension-image': 3.28.0
+  '@tiptap/extension-italic': 3.28.0
+  '@tiptap/extension-link': 3.28.0
+  '@tiptap/extension-list': 3.28.0
+  '@tiptap/extension-list-item': 3.28.0
+  '@tiptap/extension-list-keymap': 3.28.0
+  '@tiptap/extension-ordered-list': 3.28.0
+  '@tiptap/extension-paragraph': 3.28.0
+  '@tiptap/extension-placeholder': 3.28.0
+  '@tiptap/extension-strike': 3.28.0
+  '@tiptap/extension-table': 3.28.0
+  '@tiptap/extension-table-cell': 3.28.0
+  '@tiptap/extension-table-header': 3.28.0
+  '@tiptap/extension-table-row': 3.28.0
+  '@tiptap/extension-task-item': 3.28.0
+  '@tiptap/extension-task-list': 3.28.0
+  '@tiptap/extension-text': 3.28.0
+  '@tiptap/extension-text-style': 3.28.0
+  '@tiptap/extension-underline': 3.28.0
+  '@tiptap/extensions': 3.28.0
+  '@tiptap/pm': 3.28.0
+  '@tiptap/react': 3.28.0
+  '@tiptap/starter-kit': 3.28.0
+  nf3: 0.3.17
 
 patchedDependencies:
   '@agent-native/core':
-    hash: 16c99386bb969553b8be586a591824d09d53388494f12c0962099a22ac95b246
+    hash: 54ed00464b81d0c8919d7bb126fc826ec80db0d292e154180ac16f3e6c0c752e
     path: patches/@agent-native__core.patch
 
 importers:
@@ -61,7 +61,7 @@ importers:
     dependencies:
       '@agent-native/core':
         specifier: 0.159.2
-        version: 0.159.2(patch_hash=16c99386bb969553b8be586a591824d09d53388494f12c0962099a22ac95b246)(fa46c8f6f720ba6378c731cf1ff0cd8d)
+        version: 0.159.2(patch_hash=54ed00464b81d0c8919d7bb126fc826ec80db0d292e154180ac16f3e6c0c752e)(fa46c8f6f720ba6378c731cf1ff0cd8d)
       '@agent-native/toolkit':
         specifier: ^0.16.3
         version: 0.16.4(@floating-ui/dom@1.8.0)(@tiptap/extension-code-block@3.28.0(@tiptap/core@3.28.0(@tiptap/pm@3.28.0))(@tiptap/pm@3.28.0))(@tiptap/extension-list@3.28.0(@tiptap/core@3.28.0(@tiptap/pm@3.28.0))(@tiptap/pm@3.28.0))(@tiptap/extensions@3.28.0(@tiptap/core@3.28.0(@tiptap/pm@3.28.0))(@tiptap/pm@3.28.0))(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(immer@11.1.17)(prosemirror-model@1.25.11)(prosemirror-state@1.4.4)(prosemirror-view@1.42.2)(react-dom@19.2.8(react@19.2.8))(react-is@19.2.8)(react@19.2.8)(redux@5.0.1)(use-sync-external-store@1.6.0(react@19.2.8))
@@ -6579,7 +6579,7 @@ packages:
 
 snapshots:
 
-  '@agent-native/core@0.159.2(patch_hash=16c99386bb969553b8be586a591824d09d53388494f12c0962099a22ac95b246)(fa46c8f6f720ba6378c731cf1ff0cd8d)':
+  '@agent-native/core@0.159.2(patch_hash=54ed00464b81d0c8919d7bb126fc826ec80db0d292e154180ac16f3e6c0c752e)(fa46c8f6f720ba6378c731cf1ff0cd8d)':
     dependencies:
       '@agent-native/recap-cli': 0.5.4
       '@agent-native/toolkit': 0.16.4(@floating-ui/dom@1.8.0)(@tiptap/extension-code-block@3.28.0(@tiptap/core@3.28.0(@tiptap/pm@3.28.0))(@tiptap/pm@3.28.0))(@tiptap/extension-list@3.28.0(@tiptap/core@3.28.0(@tiptap/pm@3.28.0))(@tiptap/pm@3.28.0))(@tiptap/extensions@3.28.0(@tiptap/core@3.28.0(@tiptap/pm@3.28.0))(@tiptap/pm@3.28.0))(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(immer@11.1.17)(prosemirror-model@1.25.11)(prosemirror-state@1.4.4)(prosemirror-view@1.42.2)(react-dom@19.2.8(react@19.2.8))(react-is@19.2.8)(react@19.2.8)(redux@5.0.1)(use-sync-external-store@1.6.0(react@19.2.8))
