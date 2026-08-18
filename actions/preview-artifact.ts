@@ -4,6 +4,7 @@
  * Writes the `artifact-preview` application-state key; the UI panel
  * subscribes to it and renders the artifact in a sandboxed iframe.
  */
+import { ACTION_CHAT_UI_WORKSPACE_FILE_RENDERER } from "@agent-native/core/action-ui";
 import { defineAction } from "@agent-native/core/action";
 import { writeAppState } from "@agent-native/core/application-state";
 import { resourceGet } from "@agent-native/core/resources/store";
@@ -16,6 +17,7 @@ export default defineAction({
     resourceId: z.string().describe("ID of the text/html resource to preview"),
   }),
   http: false,
+  chatUI: { renderer: ACTION_CHAT_UI_WORKSPACE_FILE_RENDERER, title: "Artifact preview" },
   run: async ({ resourceId }, ctx) => {
     const resource = await resourceGet(resourceId);
     if (!resource) {
@@ -34,6 +36,16 @@ export default defineAction({
       // on the Artifacts page instead.
       threadId: ctx?.threadId ?? null,
     });
-    return { opened: true as const, path: resource.path };
+    return {
+      opened: true as const,
+      path: resource.path,
+      file: {
+        resourceId: resource.id,
+        path: resource.path,
+        name: resource.path.split("/").pop() ?? resource.path,
+        contentType: resource.mimeType,
+        sizeBytes: resource.size,
+      },
+    };
   },
 });

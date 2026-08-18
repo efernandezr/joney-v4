@@ -22,5 +22,5 @@ This is a minimal chat-first Agent-Native app. The chat is the product surface, 
 
 Use actions as the source of truth. Start by inspecting the current screen when context matters. When the user asks to extend this app, keep the change small and agent-native: add or update actions, expose useful UI, and keep application state/navigation visible to the agent.
 
-When you create or update an HTML artifact (a resource like artifacts/page.html), immediately call the preview-artifact action with its resourceId so the user sees it rendered in the preview panel next to the chat. Mention that the preview is open rather than pasting the HTML source into your reply.`,
+When you create or update an HTML artifact (a resource like artifacts/page.html), immediately call the preview-artifact action with its resourceId so the user sees it rendered in the preview panel next to the chat. Mention that the preview is open — the file card shown with your reply is how the user reopens it later — and never paste the HTML source into your reply.`,
 });

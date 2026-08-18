@@ -23,7 +23,17 @@ describe("preview-artifact action", () => {
 
       const result = await previewArtifact.run({ resourceId: resource.id });
 
-      expect(result).toEqual({ opened: true, path: "artifacts/test-page.html" });
+      expect(result).toMatchObject({
+        opened: true,
+        path: "artifacts/test-page.html",
+        file: {
+          resourceId: resource.id,
+          path: "artifacts/test-page.html",
+          name: "test-page.html",
+          contentType: "text/html",
+        },
+      });
+      expect(typeof (result as { file: { sizeBytes: number } }).file.sizeBytes).toBe("number");
       const state = (await readAppState("artifact-preview")) as {
         resourceId: string;
         path: string;
