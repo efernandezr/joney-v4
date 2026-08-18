@@ -1,5 +1,5 @@
 import { useResources } from "@agent-native/core/client/resources";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router";
 import { toast } from "sonner";
 
@@ -36,7 +36,10 @@ export default function ArtifactsRoute() {
   const [searchParams, setSearchParams] = useSearchParams();
   const consumedPreviewParam = useRef(false);
 
-  const htmlArtifacts = selectHtmlArtifacts(artifacts.data);
+  const htmlArtifacts = useMemo(
+    () => selectHtmlArtifacts(artifacts.data ?? []),
+    [artifacts.data],
+  );
 
   async function previewArtifact(resourceId: string, path: string) {
     try {
@@ -48,7 +51,11 @@ export default function ArtifactsRoute() {
 
   useEffect(() => {
     if (consumedPreviewParam.current) return;
-    if (artifacts.isLoading) return;
+    // Wait for a settled, fresh fetch: `isLoading` alone is false when
+    // react-query serves a stale cached list while a background refetch is
+    // in flight, which would false-negative on a link to a just-created
+    // artifact.
+    if (artifacts.isLoading || artifacts.isFetching) return;
     const previewId = searchParams.get("preview");
     if (!previewId) return;
 
@@ -56,6 +63,8 @@ export default function ArtifactsRoute() {
     const match = htmlArtifacts.find((r) => r.id === previewId);
     if (match) {
       void previewArtifact(match.id, match.path);
+    } else if (artifacts.isError) {
+      toast.error("Couldn't load artifacts");
     } else {
       toast.error("Artifact not found");
     }
@@ -67,7 +76,14 @@ export default function ArtifactsRoute() {
       },
       { replace: true },
     );
-  }, [artifacts.isLoading, htmlArtifacts, searchParams, setSearchParams]);
+  }, [
+    artifacts.isLoading,
+    artifacts.isFetching,
+    artifacts.isError,
+    htmlArtifacts,
+    searchParams,
+    setSearchParams,
+  ]);
 
   return (
     <div className="flex h-full min-h-0">
