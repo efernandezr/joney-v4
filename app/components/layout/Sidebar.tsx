@@ -25,6 +25,7 @@ import { useEffect, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
 
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import {
   Tooltip,
   TooltipContent,
@@ -479,6 +480,15 @@ export function Sidebar({
       </nav>
 
       <div className={cn("mt-auto shrink-0", collapsed && "py-2")}>
+        <div
+          className={cn(
+            "flex",
+            collapsed ? "justify-center px-1 py-1" : "px-2 py-1",
+          )}
+        >
+          <ThemeToggle collapsed={collapsed} />
+        </div>
+
         <nav
           className={cn(
             "grid",
