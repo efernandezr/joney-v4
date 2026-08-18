@@ -9,10 +9,11 @@ const readClientAppStateMock = vi.fn(async () => ({
   path: "artifacts/test.html",
   threadId: "t-1",
 }));
+const setClientAppStateMock = vi.fn(async () => null);
 
 vi.mock("@agent-native/core/client/application-state", () => ({
   readClientAppState: (...args: unknown[]) => readClientAppStateMock(...args),
-  setClientAppState: vi.fn(async () => null),
+  setClientAppState: (...args: unknown[]) => setClientAppStateMock(...args),
 }));
 
 const useResourceMock = vi.fn();
@@ -26,7 +27,18 @@ const useParamsMock = vi.fn(() => ({ threadId: "t-1" }) as Record<
   string,
   string | undefined
 >);
-vi.mock("react-router", () => ({ useParams: () => useParamsMock() }));
+let currentSearchParams = new URLSearchParams();
+const setSearchParamsMock = vi.fn();
+let currentPathname = "/chat/t-1";
+vi.mock("react-router", () => ({
+  useParams: () => useParamsMock(),
+  useSearchParams: () =>
+    [currentSearchParams, setSearchParamsMock] as [
+      URLSearchParams,
+      typeof setSearchParamsMock,
+    ],
+  useLocation: () => ({ pathname: currentPathname }),
+}));
 
 const toastSuccessMock = vi.fn();
 const toastErrorMock = vi.fn();
@@ -102,6 +114,10 @@ describe("ArtifactPreviewPanel", () => {
     window.localStorage.removeItem("artifact-preview-collapsed");
     toastSuccessMock.mockClear();
     toastErrorMock.mockClear();
+    setClientAppStateMock.mockClear();
+    setSearchParamsMock.mockClear();
+    currentSearchParams = new URLSearchParams();
+    currentPathname = "/chat/t-1";
   });
 
   it("collapses to a reopen chip instead of disappearing", async () => {
@@ -552,5 +568,109 @@ describe("ArtifactPreviewPanel", () => {
       return el;
     });
     expect(chatAside.className).toContain("w-[45%]");
+  });
+
+  it("opens an artifact linked via ?preview=<id> inside the conversation and strips the param", async () => {
+    currentSearchParams = new URLSearchParams({ preview: "res-2" });
+    currentPathname = "/chat/t-1";
+    readClientAppStateMock.mockResolvedValueOnce(null);
+    useResourceMock.mockImplementation((id: string | null) => {
+      if (id === "res-2") {
+        return {
+          data: {
+            id: "res-2",
+            path: "artifacts/second.html",
+            content: "<html><body>second</body></html>",
+            mimeType: "text/html",
+            size: 30,
+          },
+          isLoading: false,
+          isError: false,
+        };
+      }
+      return { data: undefined, isLoading: false, isError: false };
+    });
+
+    renderPanel("chat");
+
+    await waitFor(() => {
+      expect(setClientAppStateMock).toHaveBeenCalledWith(
+        "artifact-preview",
+        expect.objectContaining({
+          resourceId: "res-2",
+          path: "artifacts/second.html",
+          threadId: "t-1",
+        }),
+        expect.anything(),
+      );
+    });
+    await waitFor(() => {
+      expect(setSearchParamsMock).toHaveBeenCalledWith(
+        expect.any(Function),
+        { replace: true },
+      );
+    });
+    expect(toastErrorMock).not.toHaveBeenCalled();
+  });
+
+  it("toasts 'Artifact not found' and strips the param when the linked resource fails to load", async () => {
+    currentSearchParams = new URLSearchParams({ preview: "res-404" });
+    currentPathname = "/chat/t-1";
+    readClientAppStateMock.mockResolvedValueOnce(null);
+    useResourceMock.mockImplementation((id: string | null) => {
+      if (id === "res-404") {
+        return {
+          data: undefined,
+          isLoading: false,
+          isError: true,
+          refetch: vi.fn(),
+        };
+      }
+      return { data: undefined, isLoading: false, isError: false };
+    });
+
+    renderPanel("chat");
+
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledWith("Artifact not found");
+    });
+    expect(setClientAppStateMock).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(setSearchParamsMock).toHaveBeenCalledWith(
+        expect.any(Function),
+        { replace: true },
+      );
+    });
+  });
+
+  it("does not act on the ?preview param when on the /artifacts route (avoids double-firing with the page's own handler)", async () => {
+    currentSearchParams = new URLSearchParams({ preview: "res-2" });
+    currentPathname = "/artifacts";
+    readClientAppStateMock.mockResolvedValueOnce(null);
+    useResourceMock.mockImplementation((id: string | null) => {
+      if (id === "res-2") {
+        return {
+          data: {
+            id: "res-2",
+            path: "artifacts/second.html",
+            content: "<html><body>second</body></html>",
+            mimeType: "text/html",
+            size: 30,
+          },
+          isLoading: false,
+          isError: false,
+        };
+      }
+      return { data: undefined, isLoading: false, isError: false };
+    });
+
+    renderPanel("chat");
+
+    await waitFor(() => {
+      expect(readClientAppStateMock).toHaveBeenCalled();
+    });
+    expect(setClientAppStateMock).not.toHaveBeenCalled();
+    expect(setSearchParamsMock).not.toHaveBeenCalled();
+    expect(toastErrorMock).not.toHaveBeenCalled();
   });
 });

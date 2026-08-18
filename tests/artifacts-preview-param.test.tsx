@@ -47,6 +47,7 @@ vi.mock("react-router", () => ({
       URLSearchParams,
       typeof setSearchParamsMock,
     ],
+  useLocation: () => ({ pathname: "/artifacts" }),
 }));
 
 const toastSuccessMock = vi.fn();

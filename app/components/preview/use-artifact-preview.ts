@@ -2,9 +2,11 @@ import {
   readClientAppState,
   setClientAppState,
 } from "@agent-native/core/client/application-state";
+import { useResource } from "@agent-native/core/client/resources";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router";
+import { useLocation, useParams, useSearchParams } from "react-router";
+import { toast } from "sonner";
 
 import { TAB_ID } from "@/lib/tab-id";
 
@@ -147,4 +149,66 @@ export function useArtifactPreview() {
     collapse,
     expand,
   };
+}
+
+/**
+ * Honors a `?preview=<resourceId>` link clicked inside a conversation
+ * (emitted by the agent alongside the artifact file card) by opening that
+ * resource in the chat-scoped preview panel, then stripping the param.
+ *
+ * The Artifacts page (`app/routes/artifacts.tsx`) has its own handler for
+ * the same param against the page-scoped panel; this hook backs off on
+ * that route so the two never double-fire.
+ */
+export function useChatPreviewLinkParam(
+  enabled: boolean,
+  activeThreadId: string | null,
+  open: (state: ArtifactPreviewState) => Promise<void>,
+) {
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const onArtifactsRoute = location.pathname.startsWith("/artifacts");
+  const previewId = searchParams.get("preview");
+  const resource = useResource(
+    enabled && !onArtifactsRoute ? previewId : null,
+  );
+  const consumedRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!enabled) return;
+    if (onArtifactsRoute) return;
+    if (!previewId) return;
+    if (consumedRef.current === previewId) return;
+    // Wait for a settled fetch before deciding hit vs. miss.
+    if (resource.isLoading) return;
+
+    consumedRef.current = previewId;
+    if (resource.isError) {
+      toast.error("Artifact not found");
+    } else if (resource.data && resource.data.mimeType === "text/html") {
+      void open({
+        resourceId: previewId,
+        path: resource.data.path,
+        threadId: activeThreadId,
+      });
+    }
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("preview");
+        return next;
+      },
+      { replace: true },
+    );
+  }, [
+    enabled,
+    onArtifactsRoute,
+    previewId,
+    resource.isLoading,
+    resource.isError,
+    resource.data,
+    activeThreadId,
+    open,
+    setSearchParams,
+  ]);
 }

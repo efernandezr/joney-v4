@@ -10,7 +10,10 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 import { selectHtmlArtifacts } from "./artifact-list";
-import { useArtifactPreview } from "./use-artifact-preview";
+import {
+  useArtifactPreview,
+  useChatPreviewLinkParam,
+} from "./use-artifact-preview";
 
 const MAX_INLINE_BYTES = 1024 * 1024;
 
@@ -23,6 +26,8 @@ export function ArtifactPreviewPanel({
     useArtifactPreview();
   const resource = useResource(preview?.resourceId ?? null);
   const artifacts = useResources("all");
+
+  useChatPreviewLinkParam(scope === "chat", activeThreadId, open);
 
   if (!preview?.resourceId || !preview?.path) return null;
   if (!("threadId" in preview)) return null; // pre-scoping legacy value
