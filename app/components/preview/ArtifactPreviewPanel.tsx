@@ -89,10 +89,14 @@ export function ArtifactPreviewPanel({
           className="gap-1.5 text-xs"
           onClick={() => {
             const url = `${window.location.origin}/artifacts?preview=${encodeURIComponent(preview.resourceId)}`;
-            void navigator.clipboard.writeText(url).then(
-              () => toast.success("Link copied"),
-              () => toast.error("Couldn't copy the link"),
-            );
+            try {
+              void navigator.clipboard.writeText(url).then(
+                () => toast.success("Link copied"),
+                () => toast.error("Couldn't copy the link"),
+              );
+            } catch {
+              toast.error("Couldn't copy the link");
+            }
           }}
         >
           <IconLink className="size-3.5" /> Copy link
@@ -136,15 +140,9 @@ export function ArtifactPreviewPanel({
         ) : resource.data.size > MAX_INLINE_BYTES ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
             <p className="text-sm text-muted-foreground">
-              This artifact is too large to preview inline.
+              This artifact is too large to preview inline. Use Export above
+              to download it.
             </p>
-            <a
-              href={resourceDownloadUrl(resource.data.id)}
-              download
-              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground"
-            >
-              <IconDownload className="size-3.5" /> Download
-            </a>
           </div>
         ) : (
           <iframe

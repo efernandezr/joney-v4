@@ -28,6 +28,15 @@ const useParamsMock = vi.fn(() => ({ threadId: "t-1" }) as Record<
 >);
 vi.mock("react-router", () => ({ useParams: () => useParamsMock() }));
 
+const toastSuccessMock = vi.fn();
+const toastErrorMock = vi.fn();
+vi.mock("sonner", () => ({
+  toast: {
+    success: (...args: unknown[]) => toastSuccessMock(...args),
+    error: (...args: unknown[]) => toastErrorMock(...args),
+  },
+}));
+
 import { ArtifactPreviewPanel } from "../app/components/preview/ArtifactPreviewPanel";
 import { useArtifactPreview } from "../app/components/preview/use-artifact-preview";
 
@@ -91,6 +100,8 @@ describe("ArtifactPreviewPanel", () => {
     useParamsMock.mockReset();
     useParamsMock.mockReturnValue({ threadId: "t-1" });
     window.localStorage.removeItem("artifact-preview-collapsed");
+    toastSuccessMock.mockClear();
+    toastErrorMock.mockClear();
   });
 
   it("collapses to a reopen chip instead of disappearing", async () => {
@@ -229,6 +240,60 @@ describe("ArtifactPreviewPanel", () => {
     expect(
       await screen.findByRole("button", { name: /copy link/i }),
     ).toBeTruthy();
+  });
+
+  it("copies the preview link to the clipboard and toasts success", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+    useResourceMock.mockReturnValue({
+      data: {
+        id: "res-1",
+        path: "artifacts/test.html",
+        content: "<html><body>hello</body></html>",
+        mimeType: "text/html",
+        size: 30,
+      },
+      isLoading: false,
+      isError: false,
+    });
+    renderPanel();
+    await screen.findByTitle("artifacts/test.html");
+
+    (await screen.findByRole("button", { name: /copy link/i })).click();
+
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith(
+        expect.stringContaining("/artifacts?preview=res-1"),
+      );
+    });
+    await waitFor(() => {
+      expect(toastSuccessMock).toHaveBeenCalled();
+    });
+    expect(toastErrorMock).not.toHaveBeenCalled();
+  });
+
+  it("toasts an error instead of crashing when the clipboard API is unavailable", async () => {
+    Object.assign(navigator, { clipboard: undefined });
+    useResourceMock.mockReturnValue({
+      data: {
+        id: "res-1",
+        path: "artifacts/test.html",
+        content: "<html><body>hello</body></html>",
+        mimeType: "text/html",
+        size: 30,
+      },
+      isLoading: false,
+      isError: false,
+    });
+    renderPanel();
+    await screen.findByTitle("artifacts/test.html");
+
+    (await screen.findByRole("button", { name: /copy link/i })).click();
+
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalled();
+    });
+    expect(toastSuccessMock).not.toHaveBeenCalled();
   });
 
   it("shows an error state with retry when the resource fails to load", async () => {
