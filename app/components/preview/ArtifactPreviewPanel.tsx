@@ -23,7 +23,11 @@ export function ArtifactPreviewPanel({
 
   if (!preview?.resourceId || !preview?.path) return null;
   if (!("threadId" in preview)) return null; // pre-scoping legacy value
-  if (scope === "chat" && preview.threadId !== activeThreadId) return null;
+  if (
+    scope === "chat" &&
+    (activeThreadId === null || preview.threadId !== activeThreadId)
+  )
+    return null;
   if (scope === "page" && preview.threadId !== null) return null;
 
   const htmlArtifacts = selectHtmlArtifacts(artifacts.data);

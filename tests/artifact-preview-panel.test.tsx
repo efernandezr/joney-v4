@@ -22,7 +22,11 @@ vi.mock("@agent-native/core/client/resources", () => ({
   resourceDownloadUrl: (id: string) => `/download/${id}`,
 }));
 
-vi.mock("react-router", () => ({ useParams: () => ({ threadId: "t-1" }) }));
+const useParamsMock = vi.fn(() => ({ threadId: "t-1" }) as Record<
+  string,
+  string | undefined
+>);
+vi.mock("react-router", () => ({ useParams: () => useParamsMock() }));
 
 import { ArtifactPreviewPanel } from "../app/components/preview/ArtifactPreviewPanel";
 
@@ -44,6 +48,8 @@ describe("ArtifactPreviewPanel", () => {
     // pass immediately on leftover calls recorded by a previous test.
     useResourceMock.mockClear();
     readClientAppStateMock.mockClear();
+    useParamsMock.mockReset();
+    useParamsMock.mockReturnValue({ threadId: "t-1" });
   });
 
   it("renders the artifact in a sandboxed iframe without allow-same-origin", async () => {
@@ -133,6 +139,69 @@ describe("ArtifactPreviewPanel", () => {
       isError: false,
     });
     const { container } = renderPanel("chat");
+    await waitFor(() => {
+      expect(useResourceMock).toHaveBeenCalledWith("res-1");
+    });
+    expect(container.firstChild).toBeNull();
+    expect(container.querySelector("iframe")).toBeNull();
+  });
+
+  it("hides a page-scoped preview in chat scope when no conversation is active yet (null/null collision)", async () => {
+    // Fresh session / brand-new chat: no route param, nothing in
+    // localStorage yet, so activeThreadId is null. A page-scoped preview
+    // (threadId: null) must NOT be treated as "matching" a null active
+    // thread — otherwise it would leak into the chat panel.
+    useParamsMock.mockReturnValue({});
+    readClientAppStateMock.mockResolvedValueOnce({
+      resourceId: "res-1",
+      path: "artifacts/test.html",
+      threadId: null,
+    });
+    useResourceMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+    });
+    const { container } = renderPanel("chat");
+    await waitFor(() => {
+      expect(useResourceMock).toHaveBeenCalledWith("res-1");
+    });
+    expect(container.firstChild).toBeNull();
+    expect(container.querySelector("iframe")).toBeNull();
+  });
+
+  it("hides a legacy preview value that predates thread scoping (valid fields, no threadId key)", async () => {
+    readClientAppStateMock.mockResolvedValueOnce({
+      resourceId: "res-1",
+      path: "artifacts/test.html",
+      // no `threadId` key at all — this is the shape written before this
+      // feature shipped.
+    } as never);
+    useResourceMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+    });
+    const { container } = renderPanel("chat");
+    await waitFor(() => {
+      expect(useResourceMock).toHaveBeenCalledWith("res-1");
+    });
+    expect(container.firstChild).toBeNull();
+    expect(container.querySelector("iframe")).toBeNull();
+  });
+
+  it("hides a chat-scoped preview in page scope", async () => {
+    readClientAppStateMock.mockResolvedValueOnce({
+      resourceId: "res-1",
+      path: "artifacts/test.html",
+      threadId: "t-1",
+    });
+    useResourceMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+    });
+    const { container } = renderPanel("page");
     await waitFor(() => {
       expect(useResourceMock).toHaveBeenCalledWith("res-1");
     });
