@@ -205,6 +205,32 @@ describe("ArtifactPreviewPanel", () => {
     expect(iframe.getAttribute("srcdoc")).toContain("hello");
   });
 
+  it("renders an Export link and a Copy link button in the header", async () => {
+    useResourceMock.mockReturnValue({
+      data: {
+        id: "res-1",
+        path: "artifacts/test.html",
+        content: "<html><body>hello</body></html>",
+        mimeType: "text/html",
+        size: 30,
+      },
+      isLoading: false,
+      isError: false,
+    });
+    renderPanel();
+    await screen.findByTitle("artifacts/test.html");
+
+    const exportLink = (await screen.findByRole("link", {
+      name: /export/i,
+    })) as HTMLAnchorElement;
+    expect(exportLink.getAttribute("href")).toContain("res-1");
+    expect(exportLink.hasAttribute("download")).toBe(true);
+
+    expect(
+      await screen.findByRole("button", { name: /copy link/i }),
+    ).toBeTruthy();
+  });
+
   it("shows an error state with retry when the resource fails to load", async () => {
     const refetch = vi.fn();
     useResourceMock.mockReturnValue({

@@ -3,7 +3,8 @@ import {
   useResource,
   useResources,
 } from "@agent-native/core/client/resources";
-import { IconDownload, IconX } from "@tabler/icons-react";
+import { IconDownload, IconLink, IconX } from "@tabler/icons-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 
@@ -49,36 +50,60 @@ export function ArtifactPreviewPanel({
   const htmlArtifacts = selectHtmlArtifacts(artifacts.data);
 
   return (
-    <aside className="flex w-[45%] min-w-[320px] shrink-0 flex-col border-l border-border bg-card">
+    <aside className="my-3 mr-3 flex w-[45%] min-w-[360px] shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
       <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-3">
-        {htmlArtifacts.length > 1 ? (
-          <select
-            aria-label="Artifact"
-            className="min-w-0 flex-1 truncate rounded-md border border-border bg-background px-2 py-1 text-sm"
-            value={preview.resourceId}
-            onChange={(event) => {
-              const next = htmlArtifacts.find(
-                (r) => r.id === event.target.value,
-              );
-              if (next)
-                void open({
-                  resourceId: next.id,
-                  path: next.path,
-                  threadId: preview.threadId,
-                });
-            }}
-          >
-            {htmlArtifacts.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.path.replace(/^artifacts\//, "")}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <span className="min-w-0 flex-1 truncate text-sm font-medium">
-            {preview.path.replace(/^artifacts\//, "")}
-          </span>
-        )}
+        <div className="min-w-0 flex-1">
+          {htmlArtifacts.length > 1 ? (
+            <select
+              aria-label="Artifact"
+              className="min-w-0 w-full truncate rounded-md border border-border bg-background px-2 py-1 text-sm"
+              value={preview.resourceId}
+              onChange={(event) => {
+                const next = htmlArtifacts.find(
+                  (r) => r.id === event.target.value,
+                );
+                if (next)
+                  void open({
+                    resourceId: next.id,
+                    path: next.path,
+                    threadId: preview.threadId,
+                  });
+              }}
+            >
+              {htmlArtifacts.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.path.replace(/^artifacts\//, "")}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <span className="min-w-0 flex-1 truncate text-sm font-medium">
+              {preview.path.replace(/^artifacts\//, "")}
+            </span>
+          )}
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="gap-1.5 text-xs"
+          onClick={() => {
+            const url = `${window.location.origin}/artifacts?preview=${encodeURIComponent(preview.resourceId)}`;
+            void navigator.clipboard.writeText(url).then(
+              () => toast.success("Link copied"),
+              () => toast.error("Couldn't copy the link"),
+            );
+          }}
+        >
+          <IconLink className="size-3.5" /> Copy link
+        </Button>
+        <a
+          href={resourceDownloadUrl(preview.resourceId)}
+          download
+          className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium hover:bg-accent"
+        >
+          <IconDownload className="size-3.5" /> Export
+        </a>
         <Button
           type="button"
           variant="ghost"

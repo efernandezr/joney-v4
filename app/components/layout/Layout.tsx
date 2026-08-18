@@ -160,7 +160,7 @@ export function Layout({ children }: LayoutProps) {
           </SheetContent>
         </Sheet>
         {isChatRoute ? (
-          <div className="agent-layout-main-surface flex min-w-0 flex-1 overflow-hidden">
+          <div className="agent-layout-main-surface flex min-w-0 flex-1 gap-1 overflow-hidden">
             {contentFrame}
             <ArtifactPreviewPanel scope="chat" />
           </div>
