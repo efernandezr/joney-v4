@@ -18,6 +18,7 @@ export interface ArtifactPreviewState {
 const QUERY_KEY = ["app-state", "artifact-preview"];
 const ACTIVE_THREAD_STORAGE_KEY = "agent-chat-active-thread:chat";
 const COLLAPSED_KEY = "artifact-preview-collapsed";
+const COLLAPSED_EVENT = "artifact-preview:collapsed-change";
 
 function readCollapsed(): boolean {
   try {
@@ -79,12 +80,29 @@ export function useArtifactPreview() {
     typeof window === "undefined" ? false : readCollapsed(),
   );
 
+  // Multiple useArtifactPreview() instances can be mounted at once (e.g. the
+  // Artifacts page holds one for `open` while the panel holds another for
+  // `collapsed`); a plain useState here would leave other instances stale
+  // when one instance calls collapse()/expand(). Broadcast a same-tab custom
+  // event (storage events don't fire in the tab that wrote the key) so every
+  // instance re-reads localStorage and stays in sync.
+  useEffect(() => {
+    const refresh = () => setCollapsed(readCollapsed());
+    window.addEventListener(COLLAPSED_EVENT, refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener(COLLAPSED_EVENT, refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, []);
+
   function collapse() {
     try {
       window.localStorage.setItem(COLLAPSED_KEY, "1");
     } catch {
       // ignore storage failures (private mode, quota, etc.)
     }
+    window.dispatchEvent(new CustomEvent(COLLAPSED_EVENT));
     setCollapsed(true);
   }
 
@@ -94,6 +112,7 @@ export function useArtifactPreview() {
     } catch {
       // ignore storage failures (private mode, quota, etc.)
     }
+    window.dispatchEvent(new CustomEvent(COLLAPSED_EVENT));
     setCollapsed(false);
   }
 

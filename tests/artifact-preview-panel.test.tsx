@@ -29,6 +29,7 @@ const useParamsMock = vi.fn(() => ({ threadId: "t-1" }) as Record<
 vi.mock("react-router", () => ({ useParams: () => useParamsMock() }));
 
 import { ArtifactPreviewPanel } from "../app/components/preview/ArtifactPreviewPanel";
+import { useArtifactPreview } from "../app/components/preview/use-artifact-preview";
 
 function renderPanel(scope: "chat" | "page" = "chat") {
   const qc = new QueryClient({
@@ -37,6 +38,41 @@ function renderPanel(scope: "chat" | "page" = "chat") {
   return render(
     <QueryClientProvider client={qc}>
       <ArtifactPreviewPanel scope={scope} />
+    </QueryClientProvider>,
+  );
+}
+
+// A second, independent useArtifactPreview() consumer — mirrors how
+// app/routes/artifacts.tsx holds its own hook instance (for `open`) while
+// the mounted ArtifactPreviewPanel holds a separate instance (for
+// `collapsed`). Used to prove collapsed/expand state is synchronized across
+// instances rather than trapped in one component's local useState.
+function ProbeOpen() {
+  const { open } = useArtifactPreview();
+  return (
+    <button
+      type="button"
+      onClick={() =>
+        void open({
+          resourceId: "res-1",
+          path: "artifacts/test.html",
+          threadId: null,
+        })
+      }
+    >
+      probe-open
+    </button>
+  );
+}
+
+function renderPanelWithProbe(scope: "chat" | "page" = "page") {
+  const qc = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return render(
+    <QueryClientProvider client={qc}>
+      <ArtifactPreviewPanel scope={scope} />
+      <ProbeOpen />
     </QueryClientProvider>,
   );
 }
@@ -107,6 +143,45 @@ describe("ArtifactPreviewPanel", () => {
     )) as HTMLIFrameElement;
     expect(iframe.getAttribute("srcdoc")).toContain("hello");
     expect(window.localStorage.getItem("artifact-preview-collapsed")).toBeNull();
+  });
+
+  it("expands the panel when a different hook instance calls open() (cross-instance sync)", async () => {
+    // Regression: collapsed must not be trapped in one component's local
+    // useState. The panel and the probe below each mount their own
+    // useArtifactPreview() instance, just like ArtifactPreviewPanel and
+    // app/routes/artifacts.tsx do in the real app.
+    window.localStorage.setItem("artifact-preview-collapsed", "1");
+    readClientAppStateMock.mockResolvedValueOnce({
+      resourceId: "res-1",
+      path: "artifacts/test.html",
+      threadId: null,
+    });
+    useResourceMock.mockReturnValue({
+      data: {
+        id: "res-1",
+        path: "artifacts/test.html",
+        content: "<html><body>hello</body></html>",
+        mimeType: "text/html",
+        size: 30,
+      },
+      isLoading: false,
+      isError: false,
+    });
+    renderPanelWithProbe("page");
+
+    const chip = await screen.findByRole("button", { name: /test\.html/ });
+    expect(chip).toBeTruthy();
+    expect(screen.queryByTitle("artifacts/test.html")).toBeNull();
+
+    screen.getByRole("button", { name: "probe-open" }).click();
+
+    const iframe = (await screen.findByTitle(
+      "artifacts/test.html",
+    )) as HTMLIFrameElement;
+    expect(iframe.getAttribute("srcdoc")).toContain("hello");
+    expect(
+      window.localStorage.getItem("artifact-preview-collapsed"),
+    ).toBeNull();
   });
 
   it("renders the artifact in a sandboxed iframe without allow-same-origin", async () => {
