@@ -1,8 +1,8 @@
 // tests/artifact-preview-panel.test.tsx
 // @vitest-environment jsdom
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const readClientAppStateMock = vi.fn(async () => ({
   resourceId: "res-1",
@@ -42,6 +42,10 @@ function renderPanel(scope: "chat" | "page" = "chat") {
 }
 
 describe("ArtifactPreviewPanel", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   beforeEach(() => {
     // Clear call history (not implementations/return values) so a
     // waitFor(() => expect(mock).toHaveBeenCalledWith(...)) in one test can't
@@ -50,6 +54,59 @@ describe("ArtifactPreviewPanel", () => {
     readClientAppStateMock.mockClear();
     useParamsMock.mockReset();
     useParamsMock.mockReturnValue({ threadId: "t-1" });
+    window.localStorage.removeItem("artifact-preview-collapsed");
+  });
+
+  it("collapses to a reopen chip instead of disappearing", async () => {
+    window.localStorage.setItem("artifact-preview-collapsed", "1");
+    readClientAppStateMock.mockResolvedValueOnce({
+      resourceId: "res-1",
+      path: "artifacts/test.html",
+      threadId: "t-1",
+    });
+    useResourceMock.mockReturnValue({
+      data: {
+        id: "res-1",
+        path: "artifacts/test.html",
+        content: "<html><body>hello</body></html>",
+        mimeType: "text/html",
+        size: 30,
+      },
+      isLoading: false,
+      isError: false,
+    });
+    renderPanel("chat");
+    const chip = await screen.findByRole("button", { name: /test\.html/ });
+    expect(chip).toBeTruthy();
+    expect(screen.queryByTitle("artifacts/test.html")).toBeNull();
+  });
+
+  it("expands from the chip on click", async () => {
+    window.localStorage.setItem("artifact-preview-collapsed", "1");
+    readClientAppStateMock.mockResolvedValueOnce({
+      resourceId: "res-1",
+      path: "artifacts/test.html",
+      threadId: "t-1",
+    });
+    useResourceMock.mockReturnValue({
+      data: {
+        id: "res-1",
+        path: "artifacts/test.html",
+        content: "<html><body>hello</body></html>",
+        mimeType: "text/html",
+        size: 30,
+      },
+      isLoading: false,
+      isError: false,
+    });
+    renderPanel("chat");
+    const chip = await screen.findByRole("button", { name: /test\.html/ });
+    chip.click();
+    const iframe = (await screen.findByTitle(
+      "artifacts/test.html",
+    )) as HTMLIFrameElement;
+    expect(iframe.getAttribute("srcdoc")).toContain("hello");
+    expect(window.localStorage.getItem("artifact-preview-collapsed")).toBeNull();
   });
 
   it("renders the artifact in a sandboxed iframe without allow-same-origin", async () => {

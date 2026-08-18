@@ -17,7 +17,8 @@ export function ArtifactPreviewPanel({
 }: {
   scope: "chat" | "page";
 }) {
-  const { preview, activeThreadId, open, close } = useArtifactPreview();
+  const { preview, activeThreadId, open, collapsed, collapse, expand } =
+    useArtifactPreview();
   const resource = useResource(preview?.resourceId ?? null);
   const artifacts = useResources("all");
 
@@ -29,6 +30,21 @@ export function ArtifactPreviewPanel({
   )
     return null;
   if (scope === "page" && preview.threadId !== null) return null;
+
+  if (collapsed) {
+    return (
+      <button
+        type="button"
+        onClick={expand}
+        className="fixed right-0 top-1/2 z-40 -translate-y-1/2 rounded-l-lg border border-r-0 border-border bg-card px-2 py-3 text-xs font-medium shadow-md hover:bg-accent"
+        aria-label={`Reopen preview: ${preview.path.replace(/^artifacts\//, "")}`}
+      >
+        <span className="[writing-mode:vertical-rl]">
+          {preview.path.replace(/^artifacts\//, "")}
+        </span>
+      </button>
+    );
+  }
 
   const htmlArtifacts = selectHtmlArtifacts(artifacts.data);
 
@@ -68,7 +84,7 @@ export function ArtifactPreviewPanel({
           variant="ghost"
           size="icon"
           aria-label="Close preview"
-          onClick={() => void close()}
+          onClick={collapse}
         >
           <IconX className="size-4" />
         </Button>

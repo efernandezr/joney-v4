@@ -17,6 +17,15 @@ export interface ArtifactPreviewState {
 
 const QUERY_KEY = ["app-state", "artifact-preview"];
 const ACTIVE_THREAD_STORAGE_KEY = "agent-chat-active-thread:chat";
+const COLLAPSED_KEY = "artifact-preview-collapsed";
+
+function readCollapsed(): boolean {
+  try {
+    return window.localStorage.getItem(COLLAPSED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
 
 function readStoredActiveThread(): string | null {
   try {
@@ -66,20 +75,42 @@ export function useArtifactPreview() {
     queryFn: () =>
       readClientAppState<ArtifactPreviewState | null>("artifact-preview"),
   });
+  const [collapsed, setCollapsed] = useState(() =>
+    typeof window === "undefined" ? false : readCollapsed(),
+  );
+
+  function collapse() {
+    try {
+      window.localStorage.setItem(COLLAPSED_KEY, "1");
+    } catch {
+      // ignore storage failures (private mode, quota, etc.)
+    }
+    setCollapsed(true);
+  }
+
+  function expand() {
+    try {
+      window.localStorage.removeItem(COLLAPSED_KEY);
+    } catch {
+      // ignore storage failures (private mode, quota, etc.)
+    }
+    setCollapsed(false);
+  }
 
   async function open(state: ArtifactPreviewState) {
     await setClientAppState("artifact-preview", state, {
       requestSource: TAB_ID,
     });
     queryClient.setQueryData(QUERY_KEY, state);
+    expand();
   }
 
-  async function close() {
-    await setClientAppState("artifact-preview", null, {
-      requestSource: TAB_ID,
-    });
-    queryClient.setQueryData(QUERY_KEY, null);
-  }
-
-  return { preview: query.data ?? null, activeThreadId, open, close };
+  return {
+    preview: query.data ?? null,
+    activeThreadId,
+    open,
+    collapsed,
+    collapse,
+    expand,
+  };
 }
