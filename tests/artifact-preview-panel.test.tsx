@@ -455,4 +455,45 @@ describe("ArtifactPreviewPanel", () => {
     )) as HTMLIFrameElement;
     expect(iframe.getAttribute("srcdoc")).toContain("hello");
   });
+
+  it("sizes the page-scope panel to fill its container while the chat-scope panel keeps a fixed width", async () => {
+    readClientAppStateMock.mockResolvedValue({
+      resourceId: "res-1",
+      path: "artifacts/test.html",
+      threadId: null,
+    });
+    useResourceMock.mockReturnValue({
+      data: {
+        id: "res-1",
+        path: "artifacts/test.html",
+        content: "<html><body>hello</body></html>",
+        mimeType: "text/html",
+        size: 30,
+      },
+      isLoading: false,
+      isError: false,
+    });
+    const { container: pageContainer } = renderPanel("page");
+    const pageAside = await waitFor(() => {
+      const el = pageContainer.querySelector("aside");
+      if (!el) throw new Error("aside not rendered yet");
+      return el;
+    });
+    expect(pageAside.className).not.toContain("w-[45%]");
+    expect(pageAside.className).toContain("flex-1");
+    cleanup();
+
+    readClientAppStateMock.mockResolvedValue({
+      resourceId: "res-1",
+      path: "artifacts/test.html",
+      threadId: "t-1",
+    });
+    const { container: chatContainer } = renderPanel("chat");
+    const chatAside = await waitFor(() => {
+      const el = chatContainer.querySelector("aside");
+      if (!el) throw new Error("aside not rendered yet");
+      return el;
+    });
+    expect(chatAside.className).toContain("w-[45%]");
+  });
 });

@@ -6,6 +6,7 @@ import {
 import { IconDownload, IconLink, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 import { selectHtmlArtifacts } from "./artifact-list";
@@ -50,7 +51,12 @@ export function ArtifactPreviewPanel({
   const htmlArtifacts = selectHtmlArtifacts(artifacts.data);
 
   return (
-    <aside className="my-3 mr-3 flex w-[45%] min-w-[360px] shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+    <aside
+      className={cn(
+        "my-3 mr-3 flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm",
+        scope === "chat" ? "w-[45%] min-w-[360px] shrink-0" : "min-w-0 flex-1",
+      )}
+    >
       <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-3">
         <div className="min-w-0 flex-1">
           {htmlArtifacts.length > 1 ? (
