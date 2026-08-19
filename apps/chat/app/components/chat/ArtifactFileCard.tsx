@@ -11,11 +11,13 @@ import {
   IconFileText,
   IconLayoutSidebarRightExpand,
 } from "@tabler/icons-react";
-import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router";
 
 import { ArtifactExpandDialog } from "@/components/preview/ArtifactExpandDialog";
 import { useArtifactPreview } from "@/components/preview/use-artifact-preview";
+import { beginPendingArtifact } from "@/lib/artifact-pending";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ARTIFACT_FILE_RENDERER } from "@/lib/artifact-file-renderer";
@@ -78,6 +80,27 @@ export function ArtifactFileCard({ context }: ToolRendererProps) {
   const expandResource = useResource(
     expandOpen && file ? file.resourceId : null,
   );
+  const queryClient = useQueryClient();
+  const isPending = context.isRunning && !file;
+  // Serverless sync can take up to a minute to notice the agent's write, but
+  // this card streams into the transcript the moment the tool completes —
+  // so IT is the fast signal. While the save runs, publish a pending flag
+  // (the gallery shows a skeleton card); on live completion (running → file
+  // in this mounted card, i.e. not a replayed old thread), refetch the
+  // artifact list immediately.
+  const sawRunningRef = useRef(isPending);
+  useEffect(() => {
+    if (!isPending) return;
+    sawRunningRef.current = true;
+    return beginPendingArtifact();
+  }, [isPending]);
+  const fileResourceId = file?.resourceId ?? null;
+  useEffect(() => {
+    if (fileResourceId && sawRunningRef.current) {
+      sawRunningRef.current = false;
+      void queryClient.invalidateQueries({ queryKey: ["resources"] });
+    }
+  }, [fileResourceId, queryClient]);
 
   if (!file) {
     if (!context.isRunning) return null;

@@ -49,6 +49,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePendingArtifacts } from "@/lib/artifact-pending";
 import { cn } from "@/lib/utils";
 
 export function meta() {
@@ -265,6 +266,10 @@ export default function ArtifactsRoute() {
   } | null>(null);
   const dialogResource = useResource(dialogArtifact?.id ?? null);
 
+  // Artifact saves currently streaming in the agent sidebar: show a
+  // generating skeleton card so the user sees it's on its way.
+  const pendingArtifacts = usePendingArtifacts();
+
   // Live refresh: refetch the artifact list when the agent writes a resource.
   // The "resources" change counter covers same-process SSE; the preview
   // app-state change (every save-artifact updates it) covers serverless
@@ -428,6 +433,21 @@ export default function ArtifactsRoute() {
           ) : (
             <>
               <div className={GRID_CLASS}>
+                {currentPage === 0 &&
+                  Array.from({ length: pendingArtifacts }).map((_, i) => (
+                    <div
+                      key={`pending-${i}`}
+                      className="overflow-hidden rounded-xl border border-border"
+                    >
+                      <Skeleton className="aspect-[4/3] w-full rounded-none" />
+                      <div className="space-y-1.5 p-3">
+                        <Skeleton className="h-4 w-3/5" />
+                        <span className="block text-xs text-muted-foreground">
+                          Generating…
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 {pagedArtifacts.map((r) => {
                   const createdBy = createdByOf(r.metadata);
                   const canManage =
