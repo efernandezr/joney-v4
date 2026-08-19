@@ -2,6 +2,7 @@ import { agentNativePath } from "@agent-native/core/client/api-path";
 import {
   useActionMutation,
   useActionQuery,
+  useChangeVersion,
   useSession,
 } from "@agent-native/core/client/hooks";
 import {
@@ -263,6 +264,15 @@ export default function ArtifactsRoute() {
     path: string;
   } | null>(null);
   const dialogResource = useResource(dialogArtifact?.id ?? null);
+
+  // Live refresh: refetch the artifact list when the agent writes a resource.
+  // The "resources" change counter covers same-process SSE; the preview
+  // app-state change (every save-artifact updates it) covers serverless
+  // cross-invocation writes via the poll fallback.
+  const resourcesVersion = useChangeVersion("resources");
+  useEffect(() => {
+    void queryClient.invalidateQueries({ queryKey: ["resources"] });
+  }, [resourcesVersion, preview?.resourceId, queryClient]);
 
   useEffect(() => {
     if (typeof ResizeObserver === "undefined") return;

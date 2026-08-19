@@ -2,13 +2,19 @@ import {
   registerActionChatRenderer,
   type ToolRendererProps,
 } from "@agent-native/core/client/agent-chat";
-import { resourceDownloadUrl } from "@agent-native/core/client/resources";
+import {
+  resourceDownloadUrl,
+  useResource,
+} from "@agent-native/core/client/resources";
 import {
   IconDownload,
   IconFileText,
   IconLayoutSidebarRightExpand,
 } from "@tabler/icons-react";
+import { useState } from "react";
+import { useLocation } from "react-router";
 
+import { ArtifactExpandDialog } from "@/components/preview/ArtifactExpandDialog";
 import { useArtifactPreview } from "@/components/preview/use-artifact-preview";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -60,7 +66,18 @@ function formatFileSize(sizeBytes: number): string {
  */
 export function ArtifactFileCard({ context }: ToolRendererProps) {
   const { open, activeThreadId } = useArtifactPreview();
+  const location = useLocation();
   const file = parseFilePayload(context.resultJson);
+  // The chat-scoped preview drawer only exists on the full chat page. When
+  // this card renders in the agent sidebar on any other page, "Open preview"
+  // opens the resizable popup instead — same fallback rule as the Artifacts
+  // page in narrow mode.
+  const onChatRoute =
+    location.pathname === "/" || location.pathname.startsWith("/chat/");
+  const [expandOpen, setExpandOpen] = useState(false);
+  const expandResource = useResource(
+    expandOpen && file ? file.resourceId : null,
+  );
 
   if (!file) {
     if (!context.isRunning) return null;
@@ -100,18 +117,30 @@ export function ArtifactFileCard({ context }: ToolRendererProps) {
           type="button"
           size="sm"
           className="gap-1.5 text-xs"
-          onClick={() =>
-            void open({
-              resourceId: file.resourceId,
-              path: file.path,
-              threadId: activeThreadId,
-            })
-          }
+          onClick={() => {
+            if (onChatRoute) {
+              void open({
+                resourceId: file.resourceId,
+                path: file.path,
+                threadId: activeThreadId,
+              });
+            } else {
+              setExpandOpen(true);
+            }
+          }}
         >
           <IconLayoutSidebarRightExpand className="size-3.5" aria-hidden="true" />
           Open preview
         </Button>
       </div>
+      {!onChatRoute && (
+        <ArtifactExpandDialog
+          open={expandOpen}
+          onOpenChange={setExpandOpen}
+          path={file.path}
+          content={expandResource.data?.content ?? null}
+        />
+      )}
     </div>
   );
 }

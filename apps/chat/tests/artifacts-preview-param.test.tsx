@@ -51,6 +51,7 @@ vi.mock("@agent-native/core/client/hooks", () => ({
   }),
   useActionQuery: () => ({ data: { paths: [] }, refetch: vi.fn() }),
   useActionMutation: () => ({ mutate: actionMutationMock }),
+  useChangeVersion: () => 0,
 }));
 
 let currentSearchParams = new URLSearchParams();
