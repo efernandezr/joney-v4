@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npx @agent-native/core@latest deploy --preset vercel --build-only",
+  "buildCommand": "npx @agent-native/core@latest deploy --preset vercel --build-only && if [ \"$VERCEL_ENV\" = \"production\" ]; then pnpm --filter chat migrate:production; fi",
   "installCommand": "pnpm install",
   "framework": null
 }
