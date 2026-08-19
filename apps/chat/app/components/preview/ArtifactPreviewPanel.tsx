@@ -3,7 +3,12 @@ import {
   useResource,
   useResources,
 } from "@agent-native/core/client/resources";
-import { IconDownload, IconLink, IconX } from "@tabler/icons-react";
+import {
+  IconArrowsDiagonal,
+  IconDownload,
+  IconLink,
+  IconX,
+} from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { useEffect, useState } from "react";
@@ -11,6 +16,7 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
+import { ArtifactExpandDialog } from "./ArtifactExpandDialog";
 import { selectHtmlArtifacts } from "./artifact-list";
 import {
   useArtifactPreview,
@@ -31,6 +37,7 @@ export function ArtifactPreviewPanel({
   // Collapse plays the drawer's exit animation first; the panel only
   // unmounts once it finishes (animationend, or the timeout fallback).
   const [closing, setClosing] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   useChatPreviewLinkParam(scope === "chat", activeThreadId, open);
 
@@ -166,6 +173,16 @@ export function ArtifactPreviewPanel({
           type="button"
           variant="ghost"
           size="icon"
+          aria-label="Expand preview"
+          disabled={!resource.data || resource.data.size > MAX_INLINE_BYTES}
+          onClick={() => setExpanded(true)}
+        >
+          <IconArrowsDiagonal className="size-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
           aria-label="Collapse preview"
           onClick={beginCollapse}
         >
@@ -210,6 +227,12 @@ export function ArtifactPreviewPanel({
           />
         )}
       </div>
+      <ArtifactExpandDialog
+        open={expanded}
+        onOpenChange={setExpanded}
+        path={preview.path}
+        content={resource.data?.content ?? null}
+      />
     </aside>
   );
 }
