@@ -25,6 +25,8 @@ import {
 } from "react-router";
 import type { LinksFunction } from "react-router";
 
+// Side effect: registers the artifact file-card chat renderer.
+import "@/components/chat/ArtifactFileCard";
 import { Layout as AppLayout } from "@/components/layout/Layout";
 import { AppToolkitProvider } from "@/components/ui/toolkit-provider";
 import { useNavigationState } from "@/hooks/use-navigation-state";

@@ -174,6 +174,56 @@ export function useChatPreviewLinkParam(
   );
   const consumedRef = useRef<string | null>(null);
 
+  // Older agent replies embedded "Open preview" as a plain markdown anchor
+  // (?preview=<id>), which the browser follows with a full reload. Intercept
+  // those clicks and route the id through the search param client-side so
+  // legacy conversations open the drawer in place.
+  useEffect(() => {
+    if (!enabled || onArtifactsRoute) return;
+    function onClick(event: MouseEvent) {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      )
+        return;
+      const target =
+        event.target instanceof Element ? event.target : null;
+      const anchor = target?.closest<HTMLAnchorElement>("a[href]");
+      if (!anchor || anchor.target === "_blank" || anchor.hasAttribute("download"))
+        return;
+      let url: URL;
+      try {
+        url = new URL(anchor.getAttribute("href") ?? "", window.location.href);
+      } catch {
+        return;
+      }
+      const id = url.searchParams.get("preview");
+      if (
+        !id ||
+        url.origin !== window.location.origin ||
+        url.pathname !== window.location.pathname
+      )
+        return;
+      event.preventDefault();
+      // Allow re-opening the same artifact after a previous consume.
+      consumedRef.current = null;
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.set("preview", id);
+          return next;
+        },
+        { replace: true },
+      );
+    }
+    document.addEventListener("click", onClick, true);
+    return () => document.removeEventListener("click", onClick, true);
+  }, [enabled, onArtifactsRoute, setSearchParams]);
+
   useEffect(() => {
     if (!enabled) return;
     if (onArtifactsRoute) return;

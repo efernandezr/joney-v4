@@ -6,6 +6,8 @@ import {
 import { IconDownload, IconLink, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 
+import { useEffect, useState } from "react";
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -26,8 +28,38 @@ export function ArtifactPreviewPanel({
     useArtifactPreview();
   const resource = useResource(preview?.resourceId ?? null);
   const artifacts = useResources("all");
+  // Collapse plays the drawer's exit animation first; the panel only
+  // unmounts once it finishes (animationend, or the timeout fallback).
+  const [closing, setClosing] = useState(false);
 
   useChatPreviewLinkParam(scope === "chat", activeThreadId, open);
+
+  // A new artifact arriving mid-close cancels the exit so it stays open.
+  useEffect(() => {
+    setClosing(false);
+  }, [preview?.resourceId]);
+
+  // Fallback in case animationend never fires (animation interrupted,
+  // background tab, test environment without CSS animations).
+  useEffect(() => {
+    if (!closing) return;
+    const timer = window.setTimeout(() => {
+      setClosing(false);
+      collapse();
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [closing]);
+
+  function beginCollapse() {
+    const reduceMotion =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) {
+      collapse();
+      return;
+    }
+    setClosing(true);
+  }
 
   if (!preview?.resourceId || !preview?.path) return null;
   if (!("threadId" in preview)) return null; // pre-scoping legacy value
@@ -43,7 +75,7 @@ export function ArtifactPreviewPanel({
       <button
         type="button"
         onClick={expand}
-        className="fixed right-0 top-1/2 z-40 -translate-y-1/2 rounded-l-lg border border-r-0 border-border bg-card px-2 py-3 text-xs font-medium shadow-md hover:bg-accent"
+        className="fixed right-0 top-1/2 z-40 -translate-y-1/2 rounded-l-lg border border-r-0 border-border bg-card px-2 py-3 text-xs font-medium shadow-md animate-in fade-in-0 slide-in-from-right duration-200 ease-[var(--ease-collapse)] hover:bg-accent motion-reduce:animate-none"
         aria-label={`Reopen preview: ${preview.path.replace(/^artifacts\//, "")}`}
       >
         <span className="[writing-mode:vertical-rl]">
@@ -59,8 +91,19 @@ export function ArtifactPreviewPanel({
     <aside
       className={cn(
         "my-3 mr-3 flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm",
+        // Drawer entrance on mount (first open and expand-from-collapsed both
+        // remount this aside); exit plays while `closing` before unmount.
+        closing
+          ? "animate-out fade-out-0 slide-out-to-right fill-mode-forwards"
+          : "animate-in fade-in-0 slide-in-from-right",
+        "duration-300 ease-[var(--ease-drawer)] motion-reduce:animate-none",
         scope === "chat" ? "w-[45%] min-w-[360px] shrink-0" : "min-w-0 flex-1",
       )}
+      onAnimationEnd={(event) => {
+        if (!closing || event.target !== event.currentTarget) return;
+        setClosing(false);
+        collapse();
+      }}
     >
       <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-3">
         <div className="min-w-0 flex-1">
@@ -124,7 +167,7 @@ export function ArtifactPreviewPanel({
           variant="ghost"
           size="icon"
           aria-label="Collapse preview"
-          onClick={collapse}
+          onClick={beginCollapse}
         >
           <IconX className="size-4" />
         </Button>
