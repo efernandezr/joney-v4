@@ -5,6 +5,7 @@ import {
   useSession,
 } from "@agent-native/core/client/hooks";
 import {
+  useResource,
   useResources,
   type ResourceMeta,
 } from "@agent-native/core/client/resources";
@@ -21,6 +22,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { toast } from "sonner";
 
+import { ArtifactExpandDialog } from "@/components/preview/ArtifactExpandDialog";
 import { ArtifactPreviewPanel } from "@/components/preview/ArtifactPreviewPanel";
 import { selectHtmlArtifacts } from "@/components/preview/artifact-list";
 import { useArtifactPreview } from "@/components/preview/use-artifact-preview";
@@ -63,6 +65,14 @@ export function HydrateFallback() {
 const PAGE_SIZE = 12;
 const GRID_CLASS =
   "grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4";
+
+/**
+ * Below this route width the inline split preview is suppressed and card
+ * clicks open the resizable popup instead — the split needs room for both
+ * a usable grid and a usable preview, which a narrow window or an open
+ * agent chat rail doesn't leave.
+ */
+const SPLIT_MIN_WIDTH = 1100;
 
 type ArtifactScope = "personal" | "organization" | "workspace";
 
@@ -243,6 +253,29 @@ export default function ArtifactsRoute() {
   const [deleteTarget, setDeleteTarget] = useState<ResourceMeta | null>(null);
   const consumedPreviewParam = useRef(false);
 
+  // Width-based preview mode: wide → inline split panel; narrow (agent chat
+  // rail open, small window) → resizable popup. jsdom has no ResizeObserver;
+  // tests stay in wide mode.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [narrow, setNarrow] = useState(false);
+  const [dialogArtifact, setDialogArtifact] = useState<{
+    id: string;
+    path: string;
+  } | null>(null);
+  const dialogResource = useResource(dialogArtifact?.id ?? null);
+
+  useEffect(() => {
+    if (typeof ResizeObserver === "undefined") return;
+    const node = rootRef.current;
+    if (!node) return;
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width ?? 0;
+      setNarrow(width > 0 && width < SPLIT_MIN_WIDTH);
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
   const pinsQuery = useActionQuery("get-artifact-pins", {});
   const pinnedPaths = useMemo(
     () =>
@@ -300,6 +333,10 @@ export default function ArtifactsRoute() {
     !collapsed;
 
   async function previewArtifact(resourceId: string, path: string) {
+    if (narrow) {
+      setDialogArtifact({ id: resourceId, path });
+      return;
+    }
     try {
       await open({ resourceId, path, threadId: null });
     } catch {
@@ -344,7 +381,7 @@ export default function ArtifactsRoute() {
   ]);
 
   return (
-    <div className="flex h-full min-h-0">
+    <div ref={rootRef} className="flex h-full min-h-0">
       <div
         className={cn(
           "min-w-0 flex-1 overflow-y-auto",
@@ -441,7 +478,15 @@ export default function ArtifactsRoute() {
           )}
         </div>
       </div>
-      <ArtifactPreviewPanel scope="page" />
+      {!narrow && <ArtifactPreviewPanel scope="page" />}
+      <ArtifactExpandDialog
+        open={dialogArtifact !== null}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) setDialogArtifact(null);
+        }}
+        path={dialogArtifact?.path ?? ""}
+        content={dialogResource.data?.content ?? null}
+      />
       <AlertDialog
         open={deleteTarget !== null}
         onOpenChange={(open) => {
