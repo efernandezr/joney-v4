@@ -1,5 +1,18 @@
+import {
+  deleteAppState,
+  writeAppState,
+} from "@agent-native/core/application-state";
 import { closeDbExec, withMigrationRuntime } from "@agent-native/core/db";
-import { runFrameworkReleaseMigrations } from "@agent-native/core/server";
+import {
+  resourceDeleteByPath,
+  resourcePut,
+  SHARED_OWNER,
+} from "@agent-native/core/resources/store";
+import {
+  runFrameworkReleaseMigrations,
+  runWithRequestContext,
+} from "@agent-native/core/server";
+import { deleteSetting, putSetting } from "@agent-native/core/settings";
 
 /**
  * Release-time schema entrypoint.
@@ -21,6 +34,30 @@ import { runFrameworkReleaseMigrations } from "@agent-native/core/server";
 async function main(): Promise<void> {
   await withMigrationRuntime(async () => {
     await runFrameworkReleaseMigrations(null);
+    // The settings / application_state / resources stores create their tables
+    // on first WRITE (ensureTable), but production read paths (agent-engine
+    // status, MCP config, artifact lists) hit them earlier and fail with
+    // "relation does not exist" on a fresh database. Touch each store here so
+    // the tables exist before the first request. Probe rows self-delete.
+    await runWithRequestContext(
+      { userEmail: "release-probe@local" },
+      async () => {
+        await putSetting("__release_probe__", { ok: true });
+        await deleteSetting("__release_probe__");
+        await writeAppState("__release_probe__", { ok: true });
+        await deleteAppState("__release_probe__");
+        await resourcePut(
+          SHARED_OWNER,
+          "agent_scratch/.release-probe.txt",
+          "probe",
+          "text/plain",
+        );
+        await resourceDeleteByPath(
+          SHARED_OWNER,
+          "agent_scratch/.release-probe.txt",
+        );
+      },
+    );
   });
 }
 
