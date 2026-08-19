@@ -9,6 +9,10 @@ import {
   SHARED_OWNER,
 } from "@agent-native/core/resources/store";
 import {
+  deleteAppSecret,
+  writeAppSecret,
+} from "@agent-native/core/secrets";
+import {
   runFrameworkReleaseMigrations,
   runWithRequestContext,
 } from "@agent-native/core/server";
@@ -56,6 +60,19 @@ async function main(): Promise<void> {
           SHARED_OWNER,
           "agent_scratch/.release-probe.txt",
         );
+        // app_secrets (encrypted vault): the org-deletion handler reads it
+        // for cleanup before anything ever wrote a secret.
+        await writeAppSecret({
+          key: "__release_probe__",
+          scope: "workspace",
+          scopeId: "release-probe",
+          value: "probe",
+        });
+        await deleteAppSecret({
+          key: "__release_probe__",
+          scope: "workspace",
+          scopeId: "release-probe",
+        });
       },
     );
   });
