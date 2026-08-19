@@ -1,0 +1,5 @@
+{
+  "buildCommand": "npx @agent-native/core@latest deploy --preset vercel --build-only",
+  "installCommand": "pnpm install",
+  "framework": null
+}
