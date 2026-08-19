@@ -4,10 +4,16 @@
  * separate preview step.
  */
 import { defineAction } from "@agent-native/core/action";
-import { ACTION_CHAT_UI_WORKSPACE_FILE_RENDERER } from "@agent-native/core/action-ui";
 import { writeAppState } from "@agent-native/core/application-state";
-import { resourcePut, SHARED_OWNER } from "@agent-native/core/resources/store";
+import {
+  resourceGetByPath,
+  resourcePut,
+  SHARED_OWNER,
+} from "@agent-native/core/resources/store";
 import { z } from "zod";
+
+import { ARTIFACT_FILE_RENDERER } from "../app/lib/artifact-file-renderer";
+import { artifactCreatedBy } from "../server/lib/artifact-access";
 
 export default defineAction({
   description:
@@ -20,9 +26,16 @@ export default defineAction({
     content: z.string().min(1).describe("Complete HTML document content"),
   }),
   http: false,
-  chatUI: { renderer: ACTION_CHAT_UI_WORKSPACE_FILE_RENDERER, title: "Artifact saved" },
+  chatUI: { renderer: ARTIFACT_FILE_RENDERER, title: "Artifact saved" },
   run: async ({ path, content }, ctx) => {
-    const resource = await resourcePut(SHARED_OWNER, path, content, "text/html");
+    // Record the creator (scope/delete are creator-only); an update keeps
+    // the original creator rather than reassigning to the current user.
+    const existing = await resourceGetByPath(SHARED_OWNER, path);
+    const createdBy =
+      artifactCreatedBy(existing?.metadata) ?? ctx?.userEmail ?? null;
+    const resource = await resourcePut(SHARED_OWNER, path, content, "text/html", {
+      metadata: createdBy ? { createdBy } : null,
+    });
     await writeAppState("artifact-preview", {
       resourceId: resource.id,
       path: resource.path,

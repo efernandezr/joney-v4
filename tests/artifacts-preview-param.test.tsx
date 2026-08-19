@@ -19,6 +19,8 @@ interface ResourcesState {
     mimeType: string;
     updatedAt: number;
     size: number;
+    owner: string;
+    metadata: string | null;
   }>;
   isLoading: boolean;
   isFetching: boolean;
@@ -38,9 +40,31 @@ vi.mock("@agent-native/core/client/resources", () => ({
   resourceDownloadUrl: (id: string) => `/download/${id}`,
 }));
 
+const actionMutationMock = vi.fn();
+vi.mock("@agent-native/core/client/hooks", () => ({
+  useSession: () => ({
+    session: { email: "viewer@example.com" },
+    isLoading: false,
+    status: "authenticated",
+    error: null,
+    retry: () => {},
+  }),
+  useActionQuery: () => ({ data: { paths: [] }, refetch: vi.fn() }),
+  useActionMutation: () => ({ mutate: actionMutationMock }),
+}));
+
 let currentSearchParams = new URLSearchParams();
 const setSearchParamsMock = vi.fn();
 vi.mock("react-router", () => ({
+  Link: ({
+    to,
+    children,
+    ...rest
+  }: React.PropsWithChildren<{ to: string }>) => (
+    <a href={String(to)} {...rest}>
+      {children}
+    </a>
+  ),
   useParams: () => ({}) as Record<string, string | undefined>,
   useSearchParams: () =>
     [currentSearchParams, setSearchParamsMock] as [
@@ -118,6 +142,8 @@ describe("Artifacts page preview param", () => {
           mimeType: "text/html",
           updatedAt: 1,
           size: 10,
+          owner: "__shared__",
+          metadata: null,
         },
       ],
       isLoading: false,
@@ -160,6 +186,8 @@ describe("Artifacts page preview param", () => {
           mimeType: "text/html",
           updatedAt: 1,
           size: 10,
+          owner: "__shared__",
+          metadata: null,
         },
       ],
       isLoading: false,
