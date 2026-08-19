@@ -3,6 +3,10 @@ import { createAuthPlugin } from "@agent-native/core/server";
 const rawAppTitle = "Joney Ai";
 const appTitle = rawAppTitle === "{" + "{APP_TITLE}}" ? "Chat" : rawAppTitle;
 
+// App-owned auth config. If the workspace ever needs shared auth behavior,
+// move this into @joney-ai/shared/server and re-export from there — the
+// shared template's defaultAuthPlugin is only the framework default and
+// would drop this marketing config.
 export default createAuthPlugin({
   marketing: {
     appName: appTitle,

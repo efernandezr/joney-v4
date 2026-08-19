@@ -1,48 +1,37 @@
-# React Router generated types
-.react-router/
-.generated/
-
-# Logs
-logs
-*.log
-npm-debug.log*
-pnpm-debug.log*
-
-node_modules
-build/
-dist
-dist-ssr
-.output/
+node_modules/
 .netlify/
-.deploy-tmp/
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Environment
-.env
-.env.*
-!.env.example
-
-# Data
-data/*.db
-data/*.db-shm
-data/*.db-wal
-data/uploads/
-data/settings.json
-data/.sessions.json
-
-# Learnings (personal preferences and memory — use learnings.defaults.md for tracked defaults)
-learnings.md
-
 .vercel/
-.agent-native/
+dist/
+build/
+apps/*/dist/
+apps/*/build/
+apps/*/.output/
+apps/*/.netlify/
+apps/*/.vercel/
+packages/*/node_modules/
+packages/*/dist/
+packages/*/build/
+.deploy-tmp/
+
+# Env files — never commit secrets
+.env
+.env.local
+apps/*/.env
+apps/*/.env.local
+packages/*/.env
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+
+# pnpm
+.pnpm-store/
+pnpm-debug.log*
+node-compile-cache/
+
+# Local workspace data
+data/
+
+# Personal agent memory — per-developer, not shared
+learnings.md
