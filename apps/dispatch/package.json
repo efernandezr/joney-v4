@@ -1,0 +1,66 @@
+{
+  "name": "dispatch",
+  "displayName": "Dispatch",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "agent-native dev --inspect",
+    "build": "agent-native build",
+    "start": "agent-native start",
+    "typecheck": "agent-native typecheck",
+    "migrate:production": "tsx scripts/migrate-production.ts",
+    "test": "vitest --run --passWithNoTests",
+    "action": "agent-native action",
+    "script": "agent-native script",
+    "agent-native:doctor": "agent-native doctor",
+    "doctor": "agent-native doctor"
+  },
+  "dependencies": {
+    "@agent-native/core": "0.159.2",
+    "@agent-native/dispatch": "0.28.1",
+    "@agent-native/toolkit": "^0.16.3",
+    "@fontsource-variable/inter": "^5.2.8",
+    "@libsql/client": "^0.15.8",
+    "@radix-ui/react-tooltip": "^1.2.7",
+    "@tabler/icons-react": "catalog:",
+    "@tanstack/react-query": "^5.99.2",
+    "h3": "catalog:",
+    "isbot": "^5",
+    "next-themes": "^0.4.6",
+    "sonner": "^2.0.7",
+    "zod": "^4.3.6",
+    "@joney-ai/shared": "workspace:*",
+    "postgres": "^3.4.9",
+    "@react-router/dev": "^8.1.0",
+    "@react-router/fs-routes": "^8.1.0",
+    "react-router": "^8.1.0",
+    "vite": "catalog:"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.20",
+    "@tailwindcss/vite": "catalog:",
+    "@types/node": "^24.2.1",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "oxfmt": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "tailwindcss": "catalog:",
+    "tsx": "^4.20.3",
+    "typescript-7": "catalog:",
+    "vitest": "catalog:",
+    "@assistant-ui/store": ">=0.2.9 <0.2.14",
+    "@assistant-ui/tap": "^0.5.14"
+  },
+  "description": "Workspace app for Dispatch.",
+  "agent-native": {
+    "scaffold": {
+      "template": "dispatch",
+      "frameworkSkills": "default",
+      "templateRef": "@agent-native/core@0.159.2",
+      "templateSource": "github",
+      "coreVersion": "0.159.2",
+      "shape": "workspace"
+    }
+  }
+}
