@@ -45,6 +45,25 @@ describe("preview-artifact action", () => {
     });
   });
 
+  it("returns no file card when the artifact is already open", async () => {
+    await runWithRequestContext({ userEmail: "test@example.com" }, async () => {
+      const resource = await resourcePut(
+        WORKSPACE_OWNER,
+        "artifacts/already-open.html",
+        "<html><body>a</body></html>",
+        "text/html",
+      );
+      const first = await previewArtifact.run({ resourceId: resource.id });
+      expect(first).toHaveProperty("file");
+
+      // Redundant second call (e.g. right after save-artifact): no `file`
+      // payload, so the transcript renders no duplicate card.
+      const second = await previewArtifact.run({ resourceId: resource.id });
+      expect(second).toMatchObject({ opened: true, alreadyOpen: true });
+      expect(second).not.toHaveProperty("file");
+    });
+  });
+
   it("rejects a missing resource", async () => {
     await runWithRequestContext({ userEmail: "test@example.com" }, async () => {
       await expect(

@@ -5,7 +5,10 @@
  * subscribes to it and renders the artifact in a sandboxed iframe.
  */
 import { defineAction } from "@agent-native/core/action";
-import { writeAppState } from "@agent-native/core/application-state";
+import {
+  readAppState,
+  writeAppState,
+} from "@agent-native/core/application-state";
 import { resourceGet } from "@agent-native/core/resources/store";
 import { z } from "zod";
 
@@ -13,7 +16,7 @@ import { ARTIFACT_FILE_RENDERER } from "../app/lib/artifact-file-renderer";
 
 export default defineAction({
   description:
-    "Open an HTML artifact (a workspace resource such as artifacts/page.html) in the user's side preview panel so they can see and interact with it. Call this right after creating or updating an HTML artifact.",
+    "Reopen an EXISTING HTML artifact in the user's side preview panel. Only for artifacts that are not already open — save-artifact already opens the preview when saving, so never call this right after save-artifact.",
   schema: z.object({
     resourceId: z.string().describe("ID of the text/html resource to preview"),
   }),
@@ -28,6 +31,17 @@ export default defineAction({
       throw new Error(
         `Only HTML artifacts can be previewed (got ${resource.mimeType}).`,
       );
+    }
+    // Already open (e.g. a redundant call right after save-artifact): return
+    // without the `file` payload so the transcript doesn't render a second
+    // identical file card.
+    const current = await readAppState("artifact-preview");
+    if (current?.resourceId === resource.id) {
+      return {
+        opened: true as const,
+        alreadyOpen: true as const,
+        path: resource.path,
+      };
     }
     await writeAppState("artifact-preview", {
       resourceId: resource.id,
