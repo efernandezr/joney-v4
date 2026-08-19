@@ -1,5 +1,6 @@
 import {
   registerActionChatRenderer,
+  registerToolRenderer,
   type ToolRendererProps,
 } from "@agent-native/core/client/agent-chat";
 import {
@@ -85,22 +86,27 @@ export function ArtifactFileCard({ context }: ToolRendererProps) {
   // Serverless sync can take up to a minute to notice the agent's write, but
   // this card streams into the transcript the moment the tool completes —
   // so IT is the fast signal. While the save runs, publish a pending flag
-  // (the gallery shows a skeleton card); on live completion (running → file
-  // in this mounted card, i.e. not a replayed old thread), refetch the
-  // artifact list immediately.
+  // (the gallery shows a skeleton card); on live completion, refetch the
+  // artifact list immediately. Live vs replay: either this mounted card saw
+  // the running phase, or it completed as the active tail of a running turn.
+  // A replayed old thread is neither, so it triggers no refetch.
   const sawRunningRef = useRef(isPending);
+  const invalidatedRef = useRef(false);
   useEffect(() => {
     if (!isPending) return;
     sawRunningRef.current = true;
     return beginPendingArtifact();
   }, [isPending]);
   const fileResourceId = file?.resourceId ?? null;
+  const isLiveCompletion =
+    !!fileResourceId && (sawRunningRef.current || context.isActiveTail === true);
   useEffect(() => {
-    if (fileResourceId && sawRunningRef.current) {
+    if (isLiveCompletion && !invalidatedRef.current) {
+      invalidatedRef.current = true;
       sawRunningRef.current = false;
       void queryClient.invalidateQueries({ queryKey: ["resources"] });
     }
-  }, [fileResourceId, queryClient]);
+  }, [isLiveCompletion, queryClient]);
 
   if (!file) {
     if (!context.isRunning) return null;
@@ -175,3 +181,16 @@ registerActionChatRenderer({
   renderer: ARTIFACT_FILE_RENDERER,
   Component: ArtifactFileCard,
 });
+// The chatUI renderer config only attaches once the tool RESULT arrives, so
+// the registration above never renders during the running phase. Matching
+// the tool names directly makes the card render while the save streams —
+// that's what powers the in-transcript skeleton and the gallery's pending
+// card. (After the result, the chatUI registration resolves first — same
+// component either way.)
+for (const toolName of ["save-artifact", "preview-artifact"]) {
+  registerToolRenderer({
+    id: `chat.artifact-file-card:${toolName}`,
+    match: toolName,
+    Component: ArtifactFileCard,
+  });
+}
