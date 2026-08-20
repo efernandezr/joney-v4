@@ -47,3 +47,39 @@ index 6f5f3472c66c4886b4a1a56fce90feaeba0daf3e..4c9b3b0644b42f2e19eac5debca49406
                              // Scope updates piggyback on the PUT — the client uses this
                              // path for both "detach" (scope: null) and "retag" flows.
                              // Send the field as `scope: undefined` (or omit it) when
+diff --git a/dist/client/AssistantChat.js b/dist/client/AssistantChat.js
+--- a/dist/client/AssistantChat.js
++++ b/dist/client/AssistantChat.js
+@@ -2654,7 +2654,31 @@
+                     const res = await fetch(`${apiUrl}/threads/${encodeURIComponent(threadId)}`);
+                     if (!res.ok) {
+                         if (!cancelled) {
+-                            setThreadRestoreError(res.status === 404 ? "not-found" : "unavailable");
++                            // A 404 for a thread with no local or cached content is a
++                            // ghost id: a client-minted tab persisted to localStorage
++                            // before its first message created the server row. Treat it
++                            // as a fresh empty chat — the first message creates the row
++                            // (persistSubmittedUserMessage), same as any new tab —
++                            // instead of a dead-end "Restore request failed" card whose
++                            // Retry can never succeed.
++                            if (res.status === 404) {
++                                let hasLocalMessages = false;
++                                try {
++                                    hasLocalMessages = (normalizeThreadRepository(threadRuntime.export())?.messages?.length ?? 0) > 0;
++                                }
++                                catch {
++                                    // Export/normalize failure — fall through to the
++                                    // visible error surface rather than hiding content.
++                                }
++                                if (!hasLocalMessages && !initialCachedThreadSnapshot) {
++                                    setThreadRestoreError(null);
++                                    return;
++                                }
++                                setThreadRestoreError("not-found");
++                            }
++                            else {
++                                setThreadRestoreError("unavailable");
++                            }
+                         }
+                         return;
+                     }
