@@ -2,7 +2,12 @@ import {
   deleteAppState,
   writeAppState,
 } from "@agent-native/core/application-state";
-import { closeDbExec, withMigrationRuntime } from "@agent-native/core/db";
+import {
+  closeDbExec,
+  getDbExec,
+  withMigrationRuntime,
+} from "@agent-native/core/db";
+import { deleteRun, startRun } from "@agent-native/core/progress";
 import {
   resourceDeleteByPath,
   resourcePut,
@@ -17,6 +22,7 @@ import {
   runWithRequestContext,
 } from "@agent-native/core/server";
 import { deleteSetting, putSetting } from "@agent-native/core/settings";
+import { recordUsage } from "@agent-native/core/usage";
 
 /**
  * Release-time schema entrypoint.
@@ -73,6 +79,31 @@ async function main(): Promise<void> {
           scope: "workspace",
           scopeId: "release-probe",
         });
+        // token_usage: schemaEnsureDisabled() makes every ensureTable() a no-op
+        // in production serverless, so even usage WRITES fail until this table
+        // exists — the Usage settings page 500s and no spend is ever recorded.
+        await recordUsage({
+          ownerEmail: "release-probe@local",
+          inputTokens: 1,
+          outputTokens: 0,
+          model: "",
+          label: "__release_probe__",
+          refId: "__release_probe__",
+          costSource: "unavailable",
+        });
+        // No exported delete for usage rows; scoped to the probe's own
+        // (label, ref_id) pair, same key the framework uses for re-record dedupe.
+        await getDbExec().execute({
+          sql: `DELETE FROM token_usage WHERE label = ? AND ref_id = ?`,
+          args: ["__release_probe__", "__release_probe__"],
+        });
+        // progress_runs: the /runs poll reads it on every open tab and 500s
+        // until the table exists.
+        const probeRun = await startRun({
+          owner: "release-probe@local",
+          title: "__release_probe__",
+        });
+        await deleteRun(probeRun.id, "release-probe@local");
       },
     );
   });
