@@ -72,6 +72,10 @@ interface SidebarProps {
   collapsed?: boolean;
   collapsible?: boolean;
   onCollapsedChange?: (collapsed: boolean) => void;
+  /** The member's personal agent name, shown in place of the app title while
+   * on a chat route. Undefined (no agent yet, or a non-chat route) falls
+   * back to the app title. */
+  agentName?: string;
 }
 
 function formatThreadAge(updatedAt: number) {
@@ -285,6 +289,7 @@ export function Sidebar({
   collapsed = false,
   collapsible = true,
   onCollapsedChange,
+  agentName,
 }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -398,7 +403,7 @@ export function Sidebar({
                 ? t("navigation.expandSidebar")
                 : t("navigation.collapseSidebar")
               : collapsed
-                ? APP_TITLE
+                ? (agentName ?? APP_TITLE)
                 : undefined
           }
         >
@@ -420,7 +425,7 @@ export function Sidebar({
           />
           <div className={cn("min-w-0", collapsed && "sr-only")}>
             <p className="truncate text-sm font-semibold text-sidebar-accent-foreground">
-              {APP_TITLE}
+              {agentName ?? APP_TITLE}
             </p>
           </div>
         </Link>

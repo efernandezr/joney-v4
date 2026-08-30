@@ -7,6 +7,7 @@ import { useT } from "@agent-native/core/client/i18n";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 
+import { SaveAsSkillButton } from "@/components/chat/SaveAsSkillButton";
 import { WelcomeCreateAgent } from "@/components/chat/WelcomeCreateAgent";
 import { APP_TITLE } from "@/lib/app-config";
 import { TAB_ID } from "@/lib/tab-id";
@@ -105,6 +106,9 @@ export default function ChatRoute() {
         centerComposerWhenEmpty
         composerLayoutVariant="hero"
         composerPlaceholder={t("chat.composerPlaceholder")}
+        // Only on thread routes: the empty home composer has no saved
+        // conversation yet, so "save as skill" has nothing to capture.
+        composerToolbarSlot={threadId ? <SaveAsSkillButton /> : undefined}
         composerSlot={
           <div className="mx-auto mb-5 max-w-xl px-4 text-center">
             <h1 className="text-2xl font-semibold tracking-normal text-foreground sm:text-3xl">

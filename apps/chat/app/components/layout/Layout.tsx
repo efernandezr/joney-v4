@@ -6,6 +6,7 @@ import {
   useAgentChatHomeHandoff,
   useAgentChatHomeHandoffLinks,
 } from "@agent-native/core/client/agent-chat";
+import { useActionQuery } from "@agent-native/core/client/hooks";
 import { useT } from "@agent-native/core/client/i18n";
 import { HeaderActionsProvider } from "@agent-native/toolkit/app-shell";
 import { IconMenu2 } from "@tabler/icons-react";
@@ -54,6 +55,14 @@ export function Layout({ children }: LayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const isChatRoute =
     location.pathname === "/" || location.pathname.startsWith("/chat/");
+  // The personal agent's own name replaces the generic app title in the chat
+  // surface chrome once it exists, so the chat feels like a conversation with
+  // "your agent" rather than the app itself. Scoped to chat routes only —
+  // every other page keeps the app's own brand.
+  const personalAgentQuery = useActionQuery("get-personal-agent");
+  const chromeAgentName = isChatRoute
+    ? personalAgentQuery.data?.name
+    : undefined;
   const chatHomeHandoffActive = useAgentChatHomeHandoff({
     storageKey: "chat",
     activePath: location.pathname,
@@ -117,7 +126,9 @@ export function Layout({ children }: LayoutProps) {
           >
             <IconMenu2 className="size-4" />
           </Button>
-          <span className="truncate text-sm font-semibold">{APP_TITLE}</span>
+          <span className="truncate text-sm font-semibold">
+            {chromeAgentName ?? APP_TITLE}
+          </span>
         </div>
       ) : ownsToolbar ? (
         <div className="flex h-12 shrink-0 items-center border-b border-border px-4 md:hidden">
@@ -146,6 +157,7 @@ export function Layout({ children }: LayoutProps) {
           <Sidebar
             collapsed={sidebarCollapsed}
             onCollapsedChange={setSidebarCollapsed}
+            agentName={chromeAgentName}
           />
         </div>
         <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
@@ -156,7 +168,11 @@ export function Layout({ children }: LayoutProps) {
             <SheetDescription className="sr-only">
               {t("navigation.navigationDescription")}
             </SheetDescription>
-            <Sidebar collapsed={false} collapsible={false} />
+            <Sidebar
+              collapsed={false}
+              collapsible={false}
+              agentName={chromeAgentName}
+            />
           </SheetContent>
         </Sheet>
         {isChatRoute ? (
