@@ -45,4 +45,19 @@ describe("personal agent", () => {
       expect(res.exists).toBe(false);
     });
   });
+
+  it("a name containing marker-breaking characters round-trips exactly", async () => {
+    await asUser("ivy@example.com", async () => {
+      const trickyName = 'He said "hi" -->';
+      await createPersonalAgent.run(
+        { name: trickyName, persona: "Playful and a little chaotic." },
+        {} as never,
+      );
+      const res = (await getPersonalAgent.run({}, {} as never)) as {
+        exists: boolean;
+        name?: string;
+      };
+      expect(res).toMatchObject({ exists: true, name: trickyName });
+    });
+  });
 });
