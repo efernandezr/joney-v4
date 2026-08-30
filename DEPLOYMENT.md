@@ -36,6 +36,12 @@ local shared values live in the root `.env` (gitignored), app-specific ones in
 - Release migrations run via `pnpm --filter chat migrate:production`
   (`apps/chat/scripts/migrate-production.ts`) — once per deploy, never on the
   request path. Verified against the Postgres dialect with PGlite.
+- `brain_entries` (the personal-agent memory table, `apps/chat/server/lib/
+  brain-store.ts`) is this app's own owned table. Its migration runner
+  (`runBrainMigrations`) is called from the same release script, inside the
+  same `withMigrationRuntime` block as the framework's release migrations —
+  request-path `ensureBrainTables()` calls no-op in serverless production, so
+  without this the table never gets created.
 - Local dev defaults to SQLite (`apps/chat/data/app.db`, shared across apps via
   the root `.env` `DATABASE_URL`). To develop against the Postgres dialect:
   `DATABASE_URL=pglite:./data/pglite` (PGlite is single-process — run vitest

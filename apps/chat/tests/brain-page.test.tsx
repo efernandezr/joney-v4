@@ -16,6 +16,14 @@ vi.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({ invalidateQueries: invalidateQueriesMock }),
 }));
 
+const toastErrorMock = vi.fn();
+vi.mock("sonner", () => ({
+  toast: {
+    error: (...args: unknown[]) => toastErrorMock(...args),
+    success: vi.fn(),
+  },
+}));
+
 import BrainRoute from "../app/routes/brain";
 
 type BrainEntry = {
@@ -44,6 +52,7 @@ function mockEntries(entries: BrainEntry[], isLoading = false) {
 type MutationOptions = {
   onSettled?: (...args: unknown[]) => void;
   onSuccess?: (...args: unknown[]) => void;
+  onError?: (...args: unknown[]) => void;
 };
 
 // One mutate implementation per action name is shared across every
@@ -51,13 +60,21 @@ type MutationOptions = {
 // entry cards each call the hook independently, same as in the real app),
 // so calls land in a single log keyed by action name instead of being
 // clobbered by the last-mounted instance's spy.
-function mockMutations() {
+//
+// `failingActionNames` lets a test simulate a mutation failure for specific
+// actions (e.g. "delete-brain-entry") instead of always resolving as if the
+// server call succeeded, so onError toast handlers are actually exercised.
+function mockMutations(failingActionNames: string[] = []) {
   const calls: Array<{ name: string; variables: unknown }> = [];
   useActionMutationMock.mockImplementation(
     (name: string, options?: MutationOptions) => {
       const mutate = vi.fn((variables: unknown) => {
         calls.push({ name, variables });
-        options?.onSuccess?.(undefined, variables);
+        if (failingActionNames.includes(name)) {
+          options?.onError?.(new Error("boom"), variables);
+        } else {
+          options?.onSuccess?.(undefined, variables);
+        }
         options?.onSettled?.();
       });
       return { mutate, isPending: false };
@@ -72,6 +89,7 @@ describe("BrainRoute (My Brain page)", () => {
     useActionQueryMock.mockReset();
     useActionMutationMock.mockReset();
     invalidateQueriesMock.mockClear();
+    toastErrorMock.mockClear();
   });
 
   it("renders the page title", () => {
@@ -196,6 +214,44 @@ describe("BrainRoute (My Brain page)", () => {
     expect(invalidateQueriesMock).toHaveBeenCalledWith({
       queryKey: ["action", "list-brain-entries"],
     });
+  });
+
+  it("shows a toast and does not silently succeed when delete-brain-entry fails", () => {
+    mockEntries(KEPT);
+    mockMutations(["delete-brain-entry"]);
+
+    render(<BrainRoute />);
+
+    const card = screen.getByText("Likes concise replies").closest("[data-testid='brain-entry-card']");
+    const deleteButton = within(card as HTMLElement).getByRole("button", { name: /delete/i });
+    fireEvent.click(deleteButton);
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+
+    expect(toastErrorMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows a toast when update-brain-entry fails", () => {
+    mockEntries(KEPT);
+    mockMutations(["update-brain-entry"]);
+
+    render(<BrainRoute />);
+
+    const card = screen.getByText("Likes concise replies").closest("[data-testid='brain-entry-card']") as HTMLElement;
+    fireEvent.click(within(card).getByRole("button", { name: /edit/i }));
+    fireEvent.click(within(card).getByRole("button", { name: "Save" }));
+
+    expect(toastErrorMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows a toast when review-brain-entry fails", () => {
+    mockEntries([...PROPOSED, ...KEPT]);
+    mockMutations(["review-brain-entry"]);
+
+    render(<BrainRoute />);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Keep" })[0]);
+
+    expect(toastErrorMock).toHaveBeenCalledTimes(1);
   });
 
   it("renders skeleton rows while loading", () => {

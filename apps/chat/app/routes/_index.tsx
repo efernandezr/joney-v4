@@ -12,6 +12,7 @@ import { SaveAsSkillButton } from "@/components/chat/SaveAsSkillButton";
 import { WelcomeCreateAgent } from "@/components/chat/WelcomeCreateAgent";
 import { APP_TITLE } from "@/lib/app-config";
 import { TAB_ID } from "@/lib/tab-id";
+import { shouldShowWelcomeGate } from "@/lib/welcome-gate";
 
 const SEO_TITLE = `${APP_TITLE} - Open Source AI app starter with actions`;
 const SEO_DESCRIPTION =
@@ -57,9 +58,18 @@ export default function ChatRoute() {
   // Gate on "not confirmed exists" rather than "confirmed exists: false" so a
   // fresh member never sees a flash of the full chat surface while the query
   // is still in flight — the welcome panel mounts immediately and renders
-  // its own Skeleton branch until the query resolves.
-  const showWelcomeGate =
-    !threadId && !ritualStarted && personalAgentQuery.data?.exists !== true;
+  // its own Skeleton branch until the query resolves. If the query errors
+  // instead of resolving, fall back to the normal chat surface rather than
+  // gating an established member behind a panel that can never confirm
+  // `exists: true` (see shouldShowWelcomeGate).
+  const showWelcomeGate = shouldShowWelcomeGate({
+    hasThreadId: Boolean(threadId),
+    ritualStarted,
+    personalAgentQuery: {
+      data: personalAgentQuery.data,
+      isError: personalAgentQuery.isError,
+    },
+  });
 
   useEffect(() => {
     function handleChatRunning(event: Event) {

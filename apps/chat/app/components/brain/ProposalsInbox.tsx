@@ -1,6 +1,7 @@
 import { useActionMutation } from "@agent-native/core/client/hooks";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ export function ProposalsInbox({ entries }: { entries: BrainEntry[] }) {
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: ["action", "list-brain-entries"] });
     },
+    onError: () => toast.error("Couldn't update that memory — try again."),
   });
 
   return (

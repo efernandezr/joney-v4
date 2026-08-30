@@ -37,7 +37,15 @@ const getDb = createGetDb({ brainEntries });
 // identifier, unique per store so parallel migration runners on a shared
 // database don't collide on version numbers) and returns a runner function
 // rather than a promise — see core/dist/db/migrations.js.
-const migrate = runMigrations(
+//
+// Exported as `runBrainMigrations` (mirroring the workspace's
+// `runDispatchMigrations` convention — see apps/dispatch/scripts/
+// migrate-production.ts) so scripts/migrate-production.ts can call it
+// directly inside the same `withMigrationRuntime` block as the framework's
+// own release migrations. On Vercel, `runMigrations`'s self-guard skips DDL
+// in serverless request runtimes, so `ensureBrainTables()` below silently
+// no-ops there — this table only ever gets created via the release script.
+export const runBrainMigrations = runMigrations(
   [
     {
       version: 1,
@@ -66,18 +74,22 @@ const migrate = runMigrations(
 let ensured = false;
 export async function ensureBrainTables(): Promise<void> {
   if (ensured) return;
-  // `migrate` has the Nitro plugin signature `(nitroApp) => Promise<void>`,
-  // but never touches the argument — it's a type-compatibility shape so the
-  // same runner can also be registered as a Nitro plugin. `null` mirrors the
-  // direct-call pattern in scripts/migrate-production.ts.
-  await migrate(null);
+  // `runBrainMigrations` has the Nitro plugin signature
+  // `(nitroApp) => Promise<void>`, but never touches the argument — it's a
+  // type-compatibility shape so the same runner can also be registered as a
+  // Nitro plugin. `null` mirrors the direct-call pattern in
+  // scripts/migrate-production.ts.
+  await runBrainMigrations(null);
   ensured = true;
 }
 
 function ownerFilter(owner: BrainOwner) {
-  return owner.orgId
-    ? and(eq(brainEntries.ownerEmail, owner.email), eq(brainEntries.orgId, owner.orgId))
-    : eq(brainEntries.ownerEmail, owner.email);
+  // owner_email already scopes a row to exactly one human, so org_id adds no
+  // security here — it's metadata only (still written on create). ANDing it
+  // into reads used to let a mismatched org_id between surfaces (a row
+  // written with org_id null and read with orgId set, or vice versa —
+  // plausible across web vs Telegram) silently hide a member's own entries.
+  return eq(brainEntries.ownerEmail, owner.email);
 }
 
 export async function createBrainEntry(

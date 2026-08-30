@@ -2,6 +2,7 @@ import { useActionMutation } from "@agent-native/core/client/hooks";
 import { IconPencil, IconTrash } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import {
   AlertDialog,
@@ -45,9 +46,11 @@ export function BrainEntryCard({ entry }: { entry: BrainEntry }) {
 
   const update = useActionMutation("update-brain-entry", {
     onSettled: invalidate,
+    onError: () => toast.error("Couldn't save the memory — try again."),
   });
   const remove = useActionMutation("delete-brain-entry", {
     onSettled: invalidate,
+    onError: () => toast.error("Couldn't delete the memory — try again."),
   });
 
   function startEditing() {

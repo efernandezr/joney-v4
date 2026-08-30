@@ -24,6 +24,8 @@ import {
 import { deleteSetting, putSetting } from "@agent-native/core/settings";
 import { recordUsage } from "@agent-native/core/usage";
 
+import { runBrainMigrations } from "../server/lib/brain-store";
+
 /**
  * Release-time schema entrypoint.
  *
@@ -38,12 +40,17 @@ import { recordUsage } from "@agent-native/core/usage";
  * `runMigrations` — it is allowed to migrate only because it claims duty here.
  * A release entrypoint that forgets the wrapper silently does nothing.
  *
- * If this app owns tables of its own, export its migration runner from
- * `server/plugins/db.ts` and call it inside the same block.
+ * If this app owns tables of its own, export its migration runner (e.g.
+ * `runBrainMigrations` from `server/lib/brain-store.ts` below) and call it
+ * inside the same block.
  */
 async function main(): Promise<void> {
   await withMigrationRuntime(async () => {
     await runFrameworkReleaseMigrations(null);
+    // This app's own owned table (brain_entries). Serverless request
+    // runtimes skip DDL (runMigrations's self-guard), so without this call
+    // the table is never created in production and every brain action fails.
+    await runBrainMigrations(null);
     // The settings / application_state / resources stores create their tables
     // on first WRITE (ensureTable), but production read paths (agent-engine
     // status, MCP config, artifact lists) hit them earlier and fail with

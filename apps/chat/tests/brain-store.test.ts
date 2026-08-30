@@ -78,6 +78,26 @@ describe("brain-store", () => {
     });
   });
 
+  it("scopes by owner email only, not org_id, so a mismatched org_id (web vs Telegram surfaces) doesn't hide a member's own entry", async () => {
+    // Regression test for Finding 4: `ownerFilter` used to AND in org_id
+    // when the reader passed one, so a row written with orgId null (e.g.
+    // from a surface with no org context) became invisible to a read with
+    // orgId set (e.g. the web surface) even though owner_email already
+    // scopes the row to exactly one human. org_id is metadata only now.
+    const dave = { email: `dave-${crypto.randomUUID()}@example.com`, orgId: null };
+    const entry = await createBrainEntry(dave, {
+      type: "note",
+      title: "Cross-surface note",
+      body: "Written with orgId null",
+      status: "kept",
+    });
+
+    const readWithOrg = { email: dave.email, orgId: "org-1" };
+    expect(await getBrainEntry(readWithOrg, entry.id)).not.toBeNull();
+    const list = await listBrainEntries(readWithOrg);
+    expect(list.some((e) => e.id === entry.id)).toBe(true);
+  });
+
   it("syncBrainDigest includes up to 20 non-preference entries even with many kept preferences", async () => {
     // Regression test for a buffer-then-filter bug: querying only the top 60
     // most-recently-updated kept entries of ANY type, then filtering out
