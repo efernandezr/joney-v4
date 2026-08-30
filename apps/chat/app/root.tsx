@@ -27,6 +27,8 @@ import type { LinksFunction } from "react-router";
 
 // Side effect: registers the artifact file-card chat renderer.
 import "@/components/chat/ArtifactFileCard";
+// Side effect: registers the brain-proposal chat renderer.
+import "@/components/chat/BrainProposalCard";
 import { Layout as AppLayout } from "@/components/layout/Layout";
 import { AppToolkitProvider } from "@/components/ui/toolkit-provider";
 import { useNavigationState } from "@/hooks/use-navigation-state";
