@@ -1,12 +1,11 @@
 import { IconX } from "@tabler/icons-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
 const DISMISSED_KEY = "joney.telegram-card.dismissed";
 
 function readDismissed(): boolean {
-  if (typeof window === "undefined") return false;
   try {
     return window.localStorage.getItem(DISMISSED_KEY) === "true";
   } catch {
@@ -19,9 +18,22 @@ function readDismissed(): boolean {
  * exists, pointing them at Dispatch's identities page to link Telegram.
  * Dismissal is a UI-only preference persisted in localStorage; Dispatch's
  * `/dispatch/identities` page owns the actual link-token flow.
+ *
+ * This route is SSR'd, and the server has no localStorage to consult, so the
+ * component starts hidden (`dismissed: true`) on both the server render and
+ * the first client render, then reveals itself in a post-mount effect if the
+ * member has not dismissed it. That keeps server and first-client markup
+ * identical (no hydration mismatch) and means a previously dismissed card
+ * never flashes back into view — the cost is a one-frame-later appearance
+ * for a member seeing the card for the first time, which is the better
+ * trade-off for a banner.
  */
 export function ConnectTelegramCard() {
-  const [dismissed, setDismissed] = useState(readDismissed);
+  const [dismissed, setDismissed] = useState(true);
+
+  useEffect(() => {
+    setDismissed(readDismissed());
+  }, []);
 
   if (dismissed) return null;
 
