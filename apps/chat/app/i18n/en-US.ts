@@ -41,6 +41,7 @@ const messages = {
   },
   navigation: {
     artifacts: "Artifacts",
+    brain: "My Brain",
     chat: "Chat",
     collapseSidebar: "Collapse Sidebar",
     database: "Database",

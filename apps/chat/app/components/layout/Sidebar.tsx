@@ -14,6 +14,7 @@ import {
   type ChatHistoryItem,
 } from "@agent-native/toolkit/chat-history";
 import {
+  IconBrain,
   IconFileCode,
   IconLayoutSidebarLeftCollapse,
   IconLayoutSidebarLeftExpand,
@@ -46,6 +47,12 @@ const navItems = [
     labelKey: "navigation.artifacts",
     href: "/artifacts",
     view: "artifacts",
+  },
+  {
+    icon: IconBrain,
+    labelKey: "navigation.brain",
+    href: "/brain",
+    view: "brain",
   },
 ];
 
