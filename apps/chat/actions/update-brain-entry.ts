@@ -20,7 +20,6 @@ export default defineAction({
     body: z.string().min(1).max(2000).optional(),
     status: entryStatus.optional(),
   }),
-  http: false,
   run: async ({ id, ...patch }, ctx) => {
     const owner = ownerFromCtx(ctx);
     const entry = await updateBrainEntry(owner, id, patch);

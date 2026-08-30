@@ -12,7 +12,6 @@ export default defineAction({
   schema: z.object({
     id: z.string(),
   }),
-  http: false,
   run: async ({ id }, ctx) => {
     const owner = ownerFromCtx(ctx);
     const ok = await deleteBrainEntry(owner, id);

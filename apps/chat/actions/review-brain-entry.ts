@@ -15,7 +15,6 @@ export default defineAction({
     id: z.string(),
     decision: z.enum(["keep", "dismiss"]),
   }),
-  http: false,
   run: async ({ id, decision }, ctx) => {
     const owner = ownerFromCtx(ctx);
     if (decision === "keep") {
