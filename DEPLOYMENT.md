@@ -41,6 +41,44 @@ local shared values live in the root `.env` (gitignored), app-specific ones in
   `DATABASE_URL=pglite:./data/pglite` (PGlite is single-process — run vitest
   with `--no-file-parallelism` when pointing tests at it).
 
+## Telegram channel
+
+Members reach their personal agent from Telegram once this is wired up
+(operator: Enrique).
+
+1. Open Telegram and message **@BotFather**. Send `/newbot` and follow the
+   prompts to name the bot. BotFather replies with an HTTP API token — copy
+   it.
+2. Set the two Telegram env vars on the Vercel project:
+   ```bash
+   vercel env add TELEGRAM_BOT_TOKEN production
+   ```
+   Paste the token **unquoted** at the prompt — the local `.env` quoting
+   gotcha (wrapping the value in quotes) makes the literal quote characters
+   part of the stored secret.
+   ```bash
+   openssl rand -hex 32 | vercel env add TELEGRAM_WEBHOOK_SECRET production
+   ```
+3. Redeploy, then register the webhook once. This workspace serves the chat
+   app behind the shared origin at the `/chat` mount (see "Vercel project
+   settings" above), so the chat app's `/_agent-native/integrations/*` routes
+   are only reachable under that prefix — the bare `/_agent-native/...` path
+   on this origin routes to the `dispatch` app instead. Verified against
+   `@agent-native/core`'s Vercel deploy routing table
+   (`deploy/workspace-deploy.js`, non-`dispatch` apps get
+   `{ src: "/<app>/(.*)", dest: "/<app>-server" }`) and the `messaging` docs
+   (`pnpm action docs-search --slug messaging`, which documents the generic
+   single-app path `/_agent-native/integrations/telegram/setup`):
+   ```bash
+   curl -X POST https://joney-v4.vercel.app/chat/_agent-native/integrations/telegram/setup
+   ```
+   Run this once per deployment; it tells Telegram where to send messages.
+4. Each member links their own Telegram account: open `/dispatch/identities`,
+   create a link token, then send `/link TOKEN` to the bot from Telegram.
+5. Re-run step 3's webhook registration any time the deployment URL changes
+   (e.g. a new production domain), since Telegram keeps sending to the old
+   URL until re-registered.
+
 ## Post-deploy checks
 
 1. `/chat` and `/dispatch` load; sign-in works; session survives refresh.

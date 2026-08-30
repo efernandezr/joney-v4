@@ -7,6 +7,7 @@ import { useT } from "@agent-native/core/client/i18n";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 
+import { ConnectTelegramCard } from "@/components/chat/ConnectTelegramCard";
 import { SaveAsSkillButton } from "@/components/chat/SaveAsSkillButton";
 import { WelcomeCreateAgent } from "@/components/chat/WelcomeCreateAgent";
 import { APP_TITLE } from "@/lib/app-config";
@@ -85,6 +86,9 @@ export default function ChatRoute() {
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
+      {!threadId && personalAgentQuery.data?.exists === true ? (
+        <ConnectTelegramCard />
+      ) : null}
       <AgentChatSurface
         mode="page"
         chatViewTransition
