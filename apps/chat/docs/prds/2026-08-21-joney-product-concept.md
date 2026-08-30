@@ -46,7 +46,26 @@ the place where the new way of working is lived.
 campaigns, conversations, meetings, and documents, and proactively connects
 dots that are invisible to any individual because they live in separate silos.
 
-Three architectural pillars:
+**The user Joney creates (added 2026-08-30):** Joney targets a new type of
+marketer — a builder and creator, not a follower of fixed workflows.
+Workflows are dynamic and change constantly; what endures is each person's
+ability to build with AI. The owner's 3-person POC ("Connected Learning
+Agents" / Hermes pilot, doc on file) validated this: giving individuals their
+own personal agent accelerated adoption, engagement, and sharing. Ranked
+adoption drivers observed: (1) having a personal agent of their own,
+(2) experimenting by building a private brain and using a team one,
+(3) reaching the agent conveniently in Telegram, (4) discovering they could
+become builders — "something they never thought."
+
+Four architectural pillars:
+
+0. **A personal agent per member ("Joney Jr.").** Every team member gets a
+   named, durable personal agent: their own persona, private memory, private
+   brain, and personal automations — private by default, reachable via
+   Telegram identity linking. Members build and evolve their agent's skills
+   over time (the builder identity). Knowledge moves from a member's private
+   brain to the team brain only by explicit member-approved promotion with
+   review — curated, never automatically pooled, always with provenance.
 
 1. **Campaign spaces inside team workspaces.** Each company/team gets an
    isolated workspace; work is organized in campaign/project spaces holding
@@ -94,6 +113,7 @@ User-stated, verbatim where possible:
 | R6 | Web app as primary surface (existing chat + artifacts foundation) | Exists |
 | R7 | Per-team artifact branding: teams define brand/company guidelines (tokens, assets, instructions) applied to artifacts and generated outputs | Configure/extend — `@agent-native/core/brand-kit` (tokens + assets + instructions; URL/GitHub/Figma extraction) |
 | R8 | Existing Settings → Integrations surface remains available | Exists — keep |
+| R9 | Personal agent per member ("Joney Jr."): named persona, private memory and brain, personal automations, Telegram access via identity linking; private by default; explicit promote-to-team flow (proposal → review → approved team knowledge, with provenance) | Configure/extend — personal-scope agent profiles, memory, skills, and `runAs: creator` automations are framework-native; the persona editor, promotion flow UX, and builder experience are product work. Per-member Telegram *bot identity* (own bot name/avatar) is P1 (custom multi-bot registry); MVP uses the shared bot + linked identity, which still serves each member their own agent |
 
 ### P1 (post-MVP, direction set but not scheduled)
 
@@ -202,6 +222,24 @@ Round 4:
 - **Q4 second brain:** adopt Brain template, extend later.
 - **Q5 timeline:** feature-driven; owner onboards teams when the first
   feature round ships.
+
+Round 5 (2026-08-30, after the owner's "Connected Learning Agents" POC doc):
+- **Personal agents become core (R9):** the owner's 3-person Hermes pilot
+  showed personal agents accelerate adoption/engagement/sharing. Ranked
+  drivers: own personal agent > private+team brain experimentation >
+  Telegram convenience > discovering they can be builders. Product targets
+  a "builder/creator" marketer; workflows are treated as dynamic.
+- **Trust model (user decision):** campaign spaces STAY shared-by-default as
+  in Round 3 ("keep the PRD definition"); the personal agent zone is private
+  by default with explicit member-approved promotion to team knowledge. Two
+  zones, one rule each. POC principles adopted: curated-not-pooled sharing,
+  provenance mandatory, manager oversight reads promoted/shared material
+  only — the digest does not read private personal-agent content.
+- **Approach:** native personal agents inside Joney (one platform), not a
+  separate agent fleet; the POC's per-member runtime stays a lab pattern
+  only. Per-member Telegram bot identity deferred to P1; weekly
+  reflection/roundtable ritual deferred to P1.
+- **Pilot migration:** the 3 POC participants will move onto Joney.
 
 ## Assumptions (unconfirmed)
 
