@@ -54,4 +54,22 @@ describe("brain actions", () => {
       saveBrainEntry.run({ type: "note", title: "x", body: "y" }, {} as never),
     ).rejects.toThrow();
   });
+
+  it("rejects unauthenticated calls even when an ambient AGENT_USER_EMAIL is set", async () => {
+    // Pins fail-closed behavior: a call with no active request context (no
+    // runWithRequestContext) and no ctx.userEmail must still throw, even if
+    // the process has a deploy-wide AGENT_USER_EMAIL configured. Falling
+    // through to that env var would authorize the deploy env's identity
+    // rather than a signed-in user.
+    const previous = process.env.AGENT_USER_EMAIL;
+    process.env.AGENT_USER_EMAIL = "ambient@example.com";
+    try {
+      await expect(
+        saveBrainEntry.run({ type: "note", title: "x", body: "y" }, {} as never),
+      ).rejects.toThrow();
+    } finally {
+      if (previous === undefined) delete process.env.AGENT_USER_EMAIL;
+      else process.env.AGENT_USER_EMAIL = previous;
+    }
+  });
 });
