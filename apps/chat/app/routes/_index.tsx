@@ -2,10 +2,12 @@ import {
   AgentChatSurface,
   markAgentChatHomeHandoff,
 } from "@agent-native/core/client/agent-chat";
+import { useActionQuery } from "@agent-native/core/client/hooks";
 import { useT } from "@agent-native/core/client/i18n";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 
+import { WelcomeCreateAgent } from "@/components/chat/WelcomeCreateAgent";
 import { APP_TITLE } from "@/lib/app-config";
 import { TAB_ID } from "@/lib/tab-id";
 
@@ -44,6 +46,15 @@ export default function ChatRoute() {
       }
     : undefined;
 
+  // Kept true for the rest of this session once the member starts the birth
+  // ritual, so the chat surface (where the ritual conversation happens)
+  // stays visible instead of the gate re-appearing on every render before
+  // `get-personal-agent` has refetched as `exists: true`.
+  const [ritualStarted, setRitualStarted] = useState(false);
+  const personalAgentQuery = useActionQuery("get-personal-agent");
+  const showWelcomeGate =
+    personalAgentQuery.data?.exists === false && !threadId && !ritualStarted;
+
   useEffect(() => {
     function handleChatRunning(event: Event) {
       const detail = (event as CustomEvent).detail;
@@ -54,6 +65,14 @@ export default function ChatRoute() {
     return () =>
       window.removeEventListener("agentNative.chatRunning", handleChatRunning);
   }, []);
+
+  if (showWelcomeGate) {
+    return (
+      <div className="flex h-full min-h-0 flex-col bg-background">
+        <WelcomeCreateAgent onCreateAgent={() => setRitualStarted(true)} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
