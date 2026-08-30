@@ -8,24 +8,16 @@ vi.mock("@agent-native/core/client/agent-chat", () => ({
   sendToAgentChat: (...args: unknown[]) => sendToAgentChatMock(...args),
 }));
 
-const useActionQueryMock = vi.fn();
-vi.mock("@agent-native/core/client/hooks", () => ({
-  useActionQuery: (...args: unknown[]) => useActionQueryMock(...args),
-}));
-
 import { WelcomeCreateAgent } from "../app/components/chat/WelcomeCreateAgent";
 
 describe("WelcomeCreateAgent", () => {
   afterEach(() => {
     cleanup();
     sendToAgentChatMock.mockClear();
-    useActionQueryMock.mockClear();
   });
 
   it("renders the welcome CTA when get-personal-agent returns exists: false", async () => {
-    useActionQueryMock.mockReturnValue({ data: { exists: false }, isLoading: false });
-
-    render(<WelcomeCreateAgent />);
+    render(<WelcomeCreateAgent data={{ exists: false }} isLoading={false} />);
 
     expect(screen.getByText("Meet your agent")).toBeTruthy();
     expect(
@@ -34,20 +26,27 @@ describe("WelcomeCreateAgent", () => {
   });
 
   it("renders nothing when get-personal-agent returns exists: true", () => {
-    useActionQueryMock.mockReturnValue({
-      data: { exists: true, name: "Max", createdAt: "2026-01-01" },
-      isLoading: false,
-    });
-
-    const { container } = render(<WelcomeCreateAgent />);
+    const { container } = render(
+      <WelcomeCreateAgent
+        data={{ exists: true, name: "Max", createdAt: "2026-01-01" }}
+        isLoading={false}
+      />,
+    );
 
     expect(container.firstChild).toBeNull();
   });
 
-  it('clicking "Create your agent" calls sendToAgentChat with the ritual marker and submit: true', async () => {
-    useActionQueryMock.mockReturnValue({ data: { exists: false }, isLoading: false });
+  it("renders skeleton placeholders while loading, with no CTA and no sendToAgentChat call", () => {
+    const { container } = render(<WelcomeCreateAgent data={undefined} isLoading={true} />);
 
-    render(<WelcomeCreateAgent />);
+    expect(screen.queryByText("Meet your agent")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Create your agent" })).toBeNull();
+    expect(container.querySelectorAll(".animate-pulse").length).toBeGreaterThan(0);
+    expect(sendToAgentChatMock).not.toHaveBeenCalled();
+  });
+
+  it('clicking "Create your agent" calls sendToAgentChat with the ritual marker and submit: true', async () => {
+    render(<WelcomeCreateAgent data={{ exists: false }} isLoading={false} />);
 
     const button = await screen.findByRole("button", { name: "Create your agent" });
     button.click();

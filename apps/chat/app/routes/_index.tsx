@@ -52,8 +52,12 @@ export default function ChatRoute() {
   // `get-personal-agent` has refetched as `exists: true`.
   const [ritualStarted, setRitualStarted] = useState(false);
   const personalAgentQuery = useActionQuery("get-personal-agent");
+  // Gate on "not confirmed exists" rather than "confirmed exists: false" so a
+  // fresh member never sees a flash of the full chat surface while the query
+  // is still in flight — the welcome panel mounts immediately and renders
+  // its own Skeleton branch until the query resolves.
   const showWelcomeGate =
-    personalAgentQuery.data?.exists === false && !threadId && !ritualStarted;
+    !threadId && !ritualStarted && personalAgentQuery.data?.exists !== true;
 
   useEffect(() => {
     function handleChatRunning(event: Event) {
@@ -69,7 +73,11 @@ export default function ChatRoute() {
   if (showWelcomeGate) {
     return (
       <div className="flex h-full min-h-0 flex-col bg-background">
-        <WelcomeCreateAgent onCreateAgent={() => setRitualStarted(true)} />
+        <WelcomeCreateAgent
+          data={personalAgentQuery.data}
+          isLoading={personalAgentQuery.isLoading}
+          onCreateAgent={() => setRitualStarted(true)}
+        />
       </div>
     );
   }

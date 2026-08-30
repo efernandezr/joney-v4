@@ -1,5 +1,4 @@
 import { sendToAgentChat } from "@agent-native/core/client/agent-chat";
-import { useActionQuery } from "@agent-native/core/client/hooks";
 import { IconUserBolt } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const RITUAL_MESSAGE = "[joney-ritual] I want to create my personal agent.";
 
+interface PersonalAgentQueryData {
+  exists: boolean;
+  name?: string;
+  createdAt?: string;
+}
+
 interface WelcomeCreateAgentProps {
+  /** The host route's own `get-personal-agent` query result, passed down so
+   * there is a single query instance driving both the route's gate and this
+   * panel's own loading/exists branches in lockstep. */
+  data: PersonalAgentQueryData | undefined;
+  isLoading: boolean;
   /** Notified after the ritual message is sent, so a host route can flip
    * into the chat surface for the rest of the birth-ritual conversation. */
   onCreateAgent?: () => void;
@@ -19,10 +29,8 @@ interface WelcomeCreateAgentProps {
  * `[joney-ritual]` marker message, which the system prompt (see Task 5)
  * picks up to walk the member through naming and shaping their agent.
  */
-export function WelcomeCreateAgent({ onCreateAgent }: WelcomeCreateAgentProps = {}) {
-  const personalAgentQuery = useActionQuery("get-personal-agent");
-
-  if (personalAgentQuery.isLoading) {
+export function WelcomeCreateAgent({ data, isLoading, onCreateAgent }: WelcomeCreateAgentProps) {
+  if (isLoading) {
     return (
       <div className="flex h-full min-h-0 flex-1 items-center justify-center px-4">
         <div className="w-full max-w-sm space-y-4 text-center">
@@ -37,7 +45,7 @@ export function WelcomeCreateAgent({ onCreateAgent }: WelcomeCreateAgentProps = 
     );
   }
 
-  if (personalAgentQuery.data?.exists) return null;
+  if (data?.exists) return null;
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center px-4 text-center">
