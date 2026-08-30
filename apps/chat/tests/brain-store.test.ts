@@ -14,6 +14,10 @@ import {
 
 const ana = { email: "ana@example.com", orgId: "org-1" };
 const bob = { email: "bob@example.com", orgId: "org-1" };
+// Unique per run: vitest.db is a persistent SQLite file (not reset between
+// runs), and this test asserts an exact count. A fixed email would
+// accumulate rows across repeated local runs and make the assertion flaky.
+const carol = { email: `carol-${crypto.randomUUID()}@example.com`, orgId: "org-1" };
 
 describe("brain-store", () => {
   beforeAll(async () => {
@@ -71,6 +75,45 @@ describe("brain-store", () => {
       const digest = await resourceGetByPath(ana.email, "instructions/personal-brain.md");
       expect(digest).not.toBeNull();
       expect(String(digest?.content ?? "")).toContain("Brief style");
+    });
+  });
+
+  it("syncBrainDigest includes up to 20 non-preference entries even with many kept preferences", async () => {
+    // Regression test for a buffer-then-filter bug: querying only the top 60
+    // most-recently-updated kept entries of ANY type, then filtering out
+    // preferences afterward, let a large number of *more recently updated*
+    // kept preferences crowd older (but still wanted) non-preference entries
+    // out of that buffer before the type filter ever ran. Lessons are
+    // created first (older), then 45 preferences are created after them
+    // (newer) so the preferences dominate the top-60 recency window: the
+    // buggy implementation surfaced only 15 non-preference lines
+    // (60 - 45 preferences = 15 lesson slots left in the buffer) instead of
+    // the full 20-entry cap the digest format specifies.
+    for (let i = 0; i < 25; i++) {
+      await createBrainEntry(carol, {
+        type: "lesson",
+        title: `Lesson ${i}`,
+        body: "lesson body",
+        status: "kept",
+      });
+    }
+    for (let i = 0; i < 45; i++) {
+      await createBrainEntry(carol, {
+        type: "preference",
+        title: `Pref ${i}`,
+        body: "pref body",
+        status: "kept",
+      });
+    }
+
+    await syncBrainDigest(carol);
+
+    await runWithRequestContext({ userEmail: carol.email }, async () => {
+      const digest = await resourceGetByPath(carol.email, "instructions/personal-brain.md");
+      expect(digest).not.toBeNull();
+      const content = String(digest?.content ?? "");
+      const otherLines = content.split("\n").filter((line) => line.startsWith("- [lesson]"));
+      expect(otherLines.length).toBe(20);
     });
   });
 });

@@ -7,7 +7,7 @@
 import { createGetDb, runMigrations } from "@agent-native/core/db";
 import { integer, now, table, text } from "@agent-native/core/db/schema";
 import { resourcePut } from "@agent-native/core/resources/store";
-import { and, desc, eq, like, or } from "drizzle-orm";
+import { and, desc, eq, like, ne, or } from "drizzle-orm";
 
 export const brainEntries = table("brain_entries", {
   id: text("id").primaryKey(),
@@ -180,10 +180,21 @@ export async function deleteBrainEntry(owner: BrainOwner, id: string): Promise<b
 const DIGEST_PATH = "instructions/personal-brain.md";
 
 export async function syncBrainDigest(owner: BrainOwner): Promise<void> {
+  await ensureBrainTables();
+  const db = getDb();
   const prefs = await listBrainEntries(owner, { type: "preference", status: "kept" });
-  const others = (await listBrainEntries(owner, { status: "kept", limit: 60 }))
-    .filter((e) => e.type !== "preference")
-    .slice(0, 20);
+  // Query the "other" bucket directly with its own type-exclusion + limit
+  // instead of buffering the top-N kept entries of any type and filtering
+  // afterward: buffering first means a member with many kept preferences can
+  // crowd genuinely recent non-preference entries out of the buffer window
+  // before the preference filter ever runs, silently under-filling this
+  // section even though 20 qualifying entries exist.
+  const others = await db
+    .select()
+    .from(brainEntries)
+    .where(and(ownerFilter(owner), eq(brainEntries.status, "kept"), ne(brainEntries.type, "preference")))
+    .orderBy(desc(brainEntries.updatedAt))
+    .limit(20);
   const line = (e: BrainEntry) =>
     `- [${e.type}] ${e.title}: ${e.body.length > 200 ? `${e.body.slice(0, 200)}…` : e.body}`;
   const content = [
@@ -195,5 +206,8 @@ export async function syncBrainDigest(owner: BrainOwner): Promise<void> {
     "",
     "Use search-brain for anything not listed here.",
   ].join("\n");
-  await resourcePut(owner.email, DIGEST_PATH, content, "text/markdown");
+  const saved = await resourcePut(owner.email, DIGEST_PATH, content, "text/markdown");
+  if (saved.content !== content) {
+    throw new Error("brain digest write could not be verified");
+  }
 }
