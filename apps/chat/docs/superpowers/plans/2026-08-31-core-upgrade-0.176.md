@@ -72,6 +72,38 @@ patches are keyed to the exact version)
 6. Dispatch app boots and its admin loads (0.28.1 → 0.31.x is ~40 releases;
    no breaking changes marked, but untested here).
 
+## Post-upgrade findings (discovered while verifying 0.176.1 locally)
+
+1. **New base-path bug instance**: `AgentWorkspaceContent` (agent-hub resource
+   sub-tabs Files/Instructions/…/Learnings) pushStates bare
+   `/settings/agent/resources/<id>` and dispatches a synthetic popstate. Under
+   the /chat mount, React Router can observe the un-prefixed URL and force a
+   full document load the gateway cannot route (blank white page; or a silent
+   no-op depending on listener race). Fixed app-side: the settings route now
+   intercepts `history.pushState`/`replaceState` while mounted and prefixes
+   bare `/settings` URLs before they land (`prefixedSettingsHistoryUrl` in
+   `app/lib/settings-tab-routing.ts`). Upstream-report candidate (same class
+   as the 0.162.0-fixed tab bar, missed in the newer component).
+2. **Workspace-app ACL (new in 0.176.x) fails closed in dev**:
+   `isWorkspaceAppAccessAllowed` gates every `/api/*` + `/_agent-native/*`
+   call. It needs (a) `A2A_SECRET` set (now in root `.env`; without it every
+   request logs "No A2A secret available" and denies → the app looks logged
+   out with no login button, since the session itself is fine), and (b) a
+   reachable Dispatch registry: core builds the registry URL from
+   `WORKSPACE_GATEWAY_URL` (root origin) but the dev gateway has no root
+   `/_agent-native` route → 404 → deny. Worked around via
+   `AGENT_NATIVE_ORG_DIRECTORY_URL=http://127.0.0.1:8080/dispatch` in root
+   `.env` (orgDirectoryUrl wins and keeps its path prefix). NOTE: this pins
+   the dev gateway to port 8080 — run ONE dev server; if the gateway runs on
+   another port, update the var. Upstream-report candidate (dev gateway
+   should route root `/_agent-native/*` to dispatch like the deploy wrapper).
+3. **At production deploy, verify**: `A2A_SECRET` is set in Vercel env (it
+   was provisioned at initial setup — confirm), and the deployed root
+   `/_agent-native/actions/list-workspace-apps` reaches Dispatch (the Vercel
+   deploy wrapper routes root `/_agent-native/*` to Dispatch by design). If
+   chat 403s everyone with "You do not have access to this workspace app",
+   this ACL is the cause.
+
 ## Nice-to-haves unlocked (adopt deliberately, not during the upgrade)
 
 - 0.169.0 background/automation run recovery + checkpointing (relevant to the

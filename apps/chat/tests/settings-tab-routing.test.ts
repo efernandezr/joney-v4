@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  prefixedSettingsHistoryUrl,
   repairSettingsPathname,
   resolveSettingsTab,
   settingsTabPath,
@@ -97,5 +98,42 @@ describe("repairSettingsPathname", () => {
   it("ignores non-settings pathnames", () => {
     expect(repairSettingsPathname("/settingsfoo", "/chat")).toBeNull();
     expect(repairSettingsPathname("/brain", "/chat")).toBeNull();
+  });
+});
+
+describe("prefixedSettingsHistoryUrl", () => {
+  it("prefixes a bare settings pushState url (core 0.176.1 agent-hub sub-tabs)", () => {
+    expect(
+      prefixedSettingsHistoryUrl("/settings/agent/resources/learnings", "/chat"),
+    ).toBe("/chat/settings/agent/resources/learnings");
+    expect(prefixedSettingsHistoryUrl("/settings", "/chat")).toBe(
+      "/chat/settings",
+    );
+  });
+
+  it("preserves query string and hash", () => {
+    expect(
+      prefixedSettingsHistoryUrl(
+        "/settings/agent/resources/files?scope=personal#top",
+        "/chat",
+      ),
+    ).toBe("/chat/settings/agent/resources/files?scope=personal#top");
+  });
+
+  it("returns null for urls that need no repair", () => {
+    expect(
+      prefixedSettingsHistoryUrl("/chat/settings/integrations", "/chat"),
+    ).toBeNull();
+    expect(prefixedSettingsHistoryUrl("/settings/integrations", "")).toBeNull();
+    expect(prefixedSettingsHistoryUrl("/settingsfoo", "/chat")).toBeNull();
+    expect(prefixedSettingsHistoryUrl("/brain", "/chat")).toBeNull();
+  });
+
+  it("ignores non-string and absolute urls", () => {
+    expect(prefixedSettingsHistoryUrl(null, "/chat")).toBeNull();
+    expect(prefixedSettingsHistoryUrl(undefined, "/chat")).toBeNull();
+    expect(
+      prefixedSettingsHistoryUrl("https://example.com/settings", "/chat"),
+    ).toBeNull();
   });
 });

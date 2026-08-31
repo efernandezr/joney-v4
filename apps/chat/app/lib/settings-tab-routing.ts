@@ -84,3 +84,26 @@ export function repairSettingsPathname(
   }
   return `${basePath}${pathname}`;
 }
+
+/**
+ * Pre-flight version of the repair for intercepting history.pushState /
+ * replaceState calls: several framework components (e.g. core 0.176.1's
+ * AgentWorkspaceContent resource sub-tabs) push bare "/settings/..." URLs and
+ * then dispatch a synthetic popstate. If the un-prefixed URL ever reaches
+ * React Router's popstate handler, a URL outside the router basename forces a
+ * full document load that the workspace gateway cannot route (blank page).
+ * Rewriting the URL BEFORE the pushState lands avoids the race entirely.
+ * Accepts whatever the history API was called with; returns the prefixed URL
+ * string, or null when the call should pass through untouched.
+ */
+export function prefixedSettingsHistoryUrl(
+  url: unknown,
+  basePath: string,
+): string | null {
+  if (!basePath || typeof url !== "string") return null;
+  const pathname = url.split(/[?#]/, 1)[0] ?? "";
+  if (pathname !== "/settings" && !pathname.startsWith("/settings/")) {
+    return null;
+  }
+  return `${basePath}${url}`;
+}

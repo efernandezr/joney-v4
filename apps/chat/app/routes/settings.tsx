@@ -16,6 +16,7 @@ import { useNavigate, useParams } from "react-router";
 
 import { APP_TITLE } from "@/lib/app-config";
 import {
+  prefixedSettingsHistoryUrl,
   repairSettingsPathname,
   resolveSettingsTab,
   settingsTabPath,
@@ -60,17 +61,33 @@ export default function SettingsRoute() {
     [navigate],
   );
 
-  // Safety net for the framework code paths that still pushState a bare
-  // "/settings/..." URL (e.g. settings-search entries with a section hash):
-  // it dispatches popstate right after, so repair the pathname there.
+  // Several framework components pushState bare "/settings/..." URLs and then
+  // dispatch a synthetic popstate (core 0.176.1's agent-hub resource sub-tabs,
+  // settings-search entries with a section hash). If React Router's popstate
+  // handler ever observes the un-prefixed URL — outside the /chat basename —
+  // it forces a full document load the workspace gateway cannot route (blank
+  // page). Intercept pushState/replaceState while this route is mounted and
+  // prefix such URLs BEFORE they land, so the race cannot occur; keep a
+  // popstate/hashchange repair as a belt-and-braces fallback.
   useEffect(() => {
+    const { pushState, replaceState } = window.history;
+    const wrap =
+      (original: typeof window.history.pushState) =>
+      function (this: History, data: unknown, unused: string, url?: unknown) {
+        const prefixed = prefixedSettingsHistoryUrl(url, appBasePath());
+        return original.call(this, data, unused, (prefixed ?? url) as string);
+      };
+    window.history.pushState = wrap(pushState);
+    window.history.replaceState = wrap(replaceState);
+
     const repair = () => {
       const repaired = repairSettingsPathname(
         window.location.pathname,
         appBasePath(),
       );
       if (repaired) {
-        window.history.replaceState(
+        replaceState.call(
+          window.history,
           null,
           "",
           `${repaired}${window.location.search}${window.location.hash}`,
@@ -81,6 +98,8 @@ export default function SettingsRoute() {
     window.addEventListener("popstate", repair);
     window.addEventListener("hashchange", repair);
     return () => {
+      window.history.pushState = pushState;
+      window.history.replaceState = replaceState;
       window.removeEventListener("popstate", repair);
       window.removeEventListener("hashchange", repair);
     };
