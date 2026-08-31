@@ -16,9 +16,9 @@
     "doctor": "agent-native doctor"
   },
   "dependencies": {
-    "@agent-native/core": "0.159.2",
-    "@agent-native/dispatch": "0.28.1",
-    "@agent-native/toolkit": "^0.16.3",
+    "@agent-native/core": "0.176.1",
+    "@agent-native/dispatch": "0.31.28",
+    "@agent-native/toolkit": "^0.17.6",
     "@fontsource-variable/inter": "^5.2.8",
     "@libsql/client": "^0.15.8",
     "@radix-ui/react-tooltip": "^1.2.7",
@@ -57,9 +57,9 @@
     "scaffold": {
       "template": "dispatch",
       "frameworkSkills": "default",
-      "templateRef": "@agent-native/core@0.159.2",
+      "templateRef": "@agent-native/core@0.176.1",
       "templateSource": "github",
-      "coreVersion": "0.159.2",
+      "coreVersion": "0.176.1",
       "shape": "workspace"
     }
   }

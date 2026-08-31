@@ -17,8 +17,8 @@
     "doctor": "agent-native doctor"
   },
   "dependencies": {
-    "@agent-native/core": "0.159.2",
-    "@agent-native/toolkit": "^0.16.3",
+    "@agent-native/core": "0.176.1",
+    "@agent-native/toolkit": "^0.17.6",
     "@ai-sdk/google": "^4.0.44",
     "@ai-sdk/openai": "^4.0.42",
     "@electric-sql/pglite": "^0.5.5",
@@ -105,9 +105,9 @@
     "scaffold": {
       "template": "chat",
       "frameworkSkills": "default",
-      "templateRef": "@agent-native/core@0.159.2",
+      "templateRef": "@agent-native/core@0.176.1",
       "templateSource": "bundled",
-      "coreVersion": "0.159.2",
+      "coreVersion": "0.176.1",
       "shape": "workspace"
     }
   }

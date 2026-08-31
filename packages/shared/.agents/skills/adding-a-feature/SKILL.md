@@ -18,7 +18,7 @@ Scope check first: this is the checklist for a feature that adds app data or a n
 
 ## Why
 
-Agent-native apps are defined by parity: everything the UI can do, the agent can do, and vice versa. A feature that only has UI is invisible to the agent. A feature that only has scripts is invisible to the user. A feature without app-state sync means the agent is blind to what the user is doing.
+Agent-Native apps are defined by parity: everything the UI can do, the agent can do, and vice versa. A feature that only has UI is invisible to the agent. A feature that only has scripts is invisible to the user. A feature without app-state sync means the agent is blind to what the user is doing.
 
 ## The Checklist
 
@@ -75,6 +75,16 @@ Never hardcode API keys, tokens, webhook URLs, signing secrets, private
 Builder/internal data, or customer data in the action, UI, seed data, fixtures,
 docs, prompts, or generated extension/app content. Register required secrets,
 use OAuth helpers, or read scoped values from the vault/credential store.
+
+Before writing custom setup or credential UI, perform the shared-primitive
+preflight from `agent-native-toolkit`: inspect the workspace/provider connection
+catalog first, then settings, secrets/vault, OAuth, onboarding, and provider API
+support. Reuse an existing connection's app grant and scoped credential
+resolver; only use app-local vault or OAuth primitives when no reusable
+connection exists. Keep any wizard thin and provider-specific - it may explain
+prerequisites, ordering, or readiness, but must not become a second vault or
+custom credential transport. Do not mark each field `required` by reflex;
+model onboarding around the logical connection outcome.
 
 If the feature involves attachments, images, recordings, screenshots, exports,
 or other file-like payloads, design the upload path in the same change:

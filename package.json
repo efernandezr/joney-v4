@@ -12,7 +12,7 @@
     "upgrade:agent-native": "agent-native upgrade"
   },
   "dependencies": {
-    "@agent-native/core": "0.159.2",
+    "@agent-native/core": "0.176.1",
     "postgres": "^3.4.9"
   },
   "devDependencies": {
