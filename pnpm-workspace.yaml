@@ -64,9 +64,6 @@ overrides:
   "@tiptap/react": "3.28.0"
   "@tiptap/starter-kit": "3.28.0"
   nf3: "0.3.17"
-patchedDependencies:
-  '@agent-native/core': patches/@agent-native__core.patch
-
 catalog:
   "@assistant-ui/react": "^0.12.19"
   "@playwright/test": "1.61.1"
