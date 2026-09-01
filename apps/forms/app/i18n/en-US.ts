@@ -388,14 +388,13 @@ const messages = {
     extensionsForms: "Extensions — Forms",
     editFormForms: "Edit form — Forms",
     responsesForms: "Responses — Forms",
-    formsIndex:
-      "Agent-Native Forms - Open Source AI form builder and response analytics",
+    formsIndex: "Forms — Joney",
     responseInsightsForms: "Response insights - Forms",
     settingsForms: "Settings - Forms",
   },
   routeDescriptions: {
     formsIndex:
-      "Open Source AI form builder for creating, publishing, editing, and analyzing forms and responses from a chat-first workspace.",
+      "Build, publish, and analyze forms in your Joney workspace.",
     responseInsights: "Analyze form submissions with native tables and charts.",
   },
 };

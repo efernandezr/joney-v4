@@ -14,6 +14,7 @@
 - **Credentials (user decision):** deferred. Phases 2-9 test each app's standalone core features only. Google OAuth, Notion, Figma, generation provider keys, Analytics data sources, and Forms destinations are Phase 10.
 - **Test gate (user decision):** every app phase pauses for Enrique's hands-on test before merge. Do not merge an app phase without his explicit OK.
 - **Plan dropped, Tasks + Slides added (user decision):** the `plan` template is coding-agent tooling, not marketing planning. Install order: forms, tasks, slides, content, design, assets, calendar, analytics.
+- **Unification doctrine (user decision 2026-09-01): "everything is Joney", implemented as one product over sibling apps.** Apps stay separate framework apps (never ported into apps/chat), but every app must (a) appear in the shared Apps sidebar nav, (b) carry Joney branding (title/manifest/logo as a Joney section, not template branding), and (c) be operable from Joney's MAIN chat via cross-app agent delegation (`call-agent`). (c) is a REQUIRED acceptance test in every app phase. Do not fork templates into chat; do not merge agents.
 - Merge/push is blocked for the agent by the permission classifier in this session. Enrique runs `git merge` / `git push` himself (via `! <command>` in the prompt) or grants `Bash(git merge:*)` + `Bash(git push:*)` permission rules.
 - Never run `pnpm patch`, edit `node_modules`, or add `pnpm.patchedDependencies` (workspace rule). Core bugs get app-side or shared-package workarounds.
 - No `lucide-react` or other icon libs; templates use `@tabler/icons-react` — verify, don't add.
@@ -124,9 +125,12 @@ Standard procedure for every app phase (referenced as "STD" below; app-specific 
 3. Set the `description` field in `apps/<id>/package.json` (exact text per phase).
 4. Verify scaffold hygiene: `grep -r "lucide-react" apps/<id>/package.json` → no match; `grep -rn "appBasePath" apps/<id>/app/entry.client.tsx` → present; `grep -n "migrate:production" apps/<id>/package.json` → present.
 5. Wire the shared settings fix from Task 1.1 into the app's settings route, following chat's pattern (controlled `SettingsTabsPage` + `installSettingsHistoryGuard`). If the template has no custom settings route, reproduce the bug first in dev (open `/<id>/settings`, click a tab, watch the URL); only wire the fix if the bug manifests — record the result either way.
+5b. Wire the shared Apps sidebar section (`useWorkspaceAppLinks` from `@joney-ai/shared/client`) into the app's sidebar, following the chat/forms pattern from Phase 2.5, and add `@joney-ai/shared: workspace:*` to the app's dependencies.
+5c. Joney section branding: set the app's visible title/manifest to read as a Joney section (pattern from Phase 2.5's forms step), not standalone template branding.
 6. `pnpm install`, then `pnpm --filter <id> run --if-present typecheck`, `pnpm --filter <id> run --if-present test`, `pnpm --filter <id> exec agent-native doctor`.
 7. Table-collision check (all apps share one DB): list the app's schema table names (`rg -o "\"[a-z_]+\"" apps/<id>/db/schema* | sort -u` or read the schema file) and compare against already-installed apps' schemas. First-party templates are designed to coexist, so expect no collisions — but verify, don't assume.
 8. Dev smoke (browser at `http://127.0.0.1:8080/<id>` with the single `pnpm dev` gateway): app-specific script per phase below. Always also: sign in with the existing dev session (shared auth), agent sidebar/chat responds, settings tabs keep the `/<id>` prefix.
+8b. Main-chat orchestration acceptance test (REQUIRED, unification doctrine): from Joney's main chat, give one natural-language task the new app owns; the chat agent must delegate via `call-agent` and the result must be visible in the new app. Record the exact prompt used.
 9. Regression smoke: `pnpm --filter chat test` still green; /chat opens a thread; /dispatch loads and its Apps page lists the new app.
 10. USER GATE: pause; Enrique tests hands-on and says go.
 11. Commit(s) on the branch; Enrique merges to main and pushes (prod deploy).
@@ -145,6 +149,30 @@ The validation app: zero external credentials, exercises the full pipeline inclu
 - [ ] Dev smoke: open `/forms`; in Ask Forms chat, prompt "Create a beta signup form with name, email, role, and team size"; form appears; open the visual editor and reorder a field; publish; open the public fill link in a private browser window (unauthenticated); submit; see the response in the responses view; ask the agent "summarize this week's submissions".
 - [ ] STD steps 9-10 (USER GATE).
 - [ ] STD steps 11-13. Prod extra: public fill link works unauthenticated in prod.
+
+### Phase 2.5: Unified Joney shell (added 2026-09-01)
+
+Branch `phase2.5/workspace-apps-nav`. Makes the sibling apps read and behave as
+sections of one Joney product.
+
+- [x] **Apps sidebar nav** — shared `useWorkspaceAppLinks` hook in
+  `packages/shared/src/client/workspace-apps-nav.ts` (public core seams only:
+  `parseWorkspaceAppLinks` + the root `list-workspace-apps` action in prod /
+  `/_workspace/apps` on the dev gateway). Apps sections wired into chat and
+  forms sidebars; current app excluded, Dispatch last, dot-prefixed transient
+  scaffold ids filtered. Verified both directions in dev.
+- [ ] **Main-chat orchestration acceptance test (Forms)** — in Joney's main
+  chat, ask "Create a feedback form with one rating question, keep it as a
+  draft"; the chat agent must delegate to the Forms agent via `call-agent` and
+  the form must appear in Forms. This validates the pattern every later phase
+  repeats.
+- [ ] **Joney section branding (minimum viable)** — forms' manifest/app title
+  presented as a Joney section (e.g. "Forms · Joney") instead of standalone
+  template branding. Full visual identity (logo assets, palette, DESIGN.md
+  directions per app) stays in the later branding phase; this step only removes
+  the "foreign product" reading.
+- [ ] USER GATE → merge phase2.5/workspace-apps-nav → prod smoke (Apps nav
+  visible in prod chat + forms; main-chat delegation works in prod).
 
 ### Phase 3: Tasks (`tasks`)
 
