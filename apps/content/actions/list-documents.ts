@@ -21,6 +21,9 @@ import {
   DOCUMENT_DISCOVERY_MAX_LIMIT,
   documentDiscoveryPagination,
   documentDiscoveryWhere,
+  normalizedIdFilter,
+  normalizedParentIdFilter,
+  normalizedTitleFilter,
 } from "./_document-discovery-query.js";
 import { serializeDocumentSource } from "./_document-source.js";
 import { parseDatabaseViewConfig } from "./_property-utils.js";
@@ -72,19 +75,30 @@ export default defineAction({
     exactTitle: z
       .string()
       .trim()
-      .min(1)
+      .describe(
+        "Case-sensitive exact document title. Omit unless matching a known exact title.",
+      )
       .optional()
-      .describe("Case-sensitive exact document title"),
+      .transform(normalizedTitleFilter),
     parentId: z
       .string()
       .nullable()
+      .describe(
+        "Exact parent document ID; null selects only top-level documents. Omit to list all levels.",
+      )
       .optional()
-      .describe("Exact parent document ID; null selects roots"),
-    spaceId: z.string().min(1).optional().describe("Exact Content space ID"),
+      .transform(normalizedParentIdFilter),
+    spaceId: z
+      .string()
+      .describe(
+        'Exact Content space ID (content_space_…). Omit — or pass "all" — to list every accessible space.',
+      )
+      .optional()
+      .transform(normalizedIdFilter),
     documentType: z
       .enum(["page", "database"])
       .optional()
-      .describe("Only ordinary pages or database pages"),
+      .describe("Only ordinary pages or database pages. Omit to include both."),
   }),
   http: { method: "GET" },
   readOnly: true,

@@ -28,6 +28,62 @@ export interface DocumentDiscoveryFilters {
   additional?: SQL;
 }
 
+/**
+ * Agent tool calls arrive with placeholder values in optional filter fields:
+ * some models cannot leave an optional parameter unset and fill it with a
+ * sentinel like ".", ",", "all", or "any" (observed with GPT-5.6 Luna; the
+ * guard is model-agnostic). A placeholder that reaches SQL filters every row
+ * out and the agent wrongly concludes the content does not exist. Normalize
+ * placeholders to "unset" at the schema boundary so agent calls, HTTP calls,
+ * and any future model behave identically. Real ids are never shaped like
+ * these sentinels, and "all"/"any"/"*" read as an explicit no-filter request.
+ */
+const ID_FILTER_PLACEHOLDERS = new Set([
+  "",
+  ".",
+  ",",
+  "*",
+  "-",
+  "all",
+  "any",
+  "none",
+  "null",
+  "undefined",
+  "n/a",
+]);
+
+// Titles are free-form user text, so only reject values that cannot be a
+// real title: empty and bare punctuation. Words like "null" or "N/A" stay —
+// a page could genuinely carry that name.
+const TITLE_FILTER_PLACEHOLDERS = new Set(["", ".", ",", "*", "-"]);
+
+export function normalizedIdFilter(
+  value: string | undefined,
+): string | undefined {
+  if (value === undefined) return undefined;
+  const trimmed = value.trim();
+  return ID_FILTER_PLACEHOLDERS.has(trimmed.toLowerCase())
+    ? undefined
+    : trimmed;
+}
+
+export function normalizedTitleFilter(
+  value: string | undefined,
+): string | undefined {
+  if (value === undefined) return undefined;
+  const trimmed = value.trim();
+  return TITLE_FILTER_PLACEHOLDERS.has(trimmed) ? undefined : trimmed;
+}
+
+export function normalizedParentIdFilter(
+  value: string | null | undefined,
+): string | null | undefined {
+  // `null` keeps its documented meaning (top-level documents only); only
+  // placeholder strings collapse to "no parent filter".
+  if (typeof value !== "string") return value;
+  return normalizedIdFilter(value);
+}
+
 export function documentDiscoveryWhere({
   userEmail,
   authorizedOrgIds,
