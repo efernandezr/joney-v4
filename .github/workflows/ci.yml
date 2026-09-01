@@ -39,6 +39,11 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # design's bridge.guard.spec launches real headless Chromium via
+      # @playwright/test; fresh runners have no Playwright browsers (CI run 3:
+      # 114 of its 141 tests fail without this). Filter-scoped because
+      # playwright is a design dependency, not a root one.
+      - run: pnpm --filter design exec playwright install --with-deps chromium
       - run: pnpm -r --if-present run typecheck
         env:
           DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/ci_build_only
