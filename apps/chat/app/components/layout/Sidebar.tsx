@@ -161,8 +161,12 @@ function WorkspaceAppsSection({
       )}
       {apps.map((app) => {
         const link = (
+          // target="_top": full document navigation to a sibling app. Also
+          // opts out of core's chat-route handoff click interceptor, which
+          // would otherwise rewrite cross-app links to /chat/<app> (404).
           <a
             href={app.href}
+            target="_top"
             className={navClass({ isActive: false })}
             aria-label={collapsed ? app.name : undefined}
           >

@@ -498,6 +498,9 @@ export function Sidebar() {
                 <a
                   key={app.id}
                   href={app.href}
+                  // target="_top": full document navigation to a sibling app;
+                  // opts out of core's chat-route handoff click interceptor.
+                  target="_top"
                   className="forms-sidebar-nav-item flex min-h-[44px] w-full min-w-0 max-w-full items-center gap-2.5 overflow-hidden rounded-lg px-3 py-2 text-sm text-muted-foreground active:scale-[0.96] transition-[background-color,box-shadow,color,transform] hover:bg-accent/50 hover:text-foreground"
                 >
                   <IconApps className="h-4 w-4 shrink-0" />
