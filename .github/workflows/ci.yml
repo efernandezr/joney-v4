@@ -16,10 +16,14 @@ concurrency:
 # Dummy values so the framework's production-config validation passes in CI
 # (agent-native typecheck/build load app config and hard-fail without them).
 # Nothing is deployed or connected from CI; real values live only in Vercel.
+# Scoped per step, NOT workflow-wide: the postgres-shaped DATABASE_URL is
+# needed only where production config is validated (typecheck, build). If the
+# test step sees it, the portable schema helpers build in postgres dialect
+# while unit tests run on local SQLite, and boolean columns come back 0/1
+# instead of false/true (tasks store tests caught this in CI run 3).
 env:
   BETTER_AUTH_SECRET: ci-dummy-better-auth-secret-0000000000000000
   A2A_SECRET: ci-dummy-a2a-secret-00000000000000000000000000
-  DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/ci_build_only
 
 jobs:
   test:
@@ -36,6 +40,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm -r --if-present run typecheck
+        env:
+          DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/ci_build_only
+      # No DATABASE_URL here — tests must run with local-SQLite dialect
+      # detection, exactly like a developer machine.
       - run: pnpm -r --if-present run test
 
   build:
@@ -55,4 +63,6 @@ jobs:
       # CI. compress-vercel-routes exits non-zero above Vercel's 2048-route
       # deployment limit.
       - run: npx @agent-native/core@latest deploy --preset vercel --build-only
+        env:
+          DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/ci_build_only
       - run: node scripts/compress-vercel-routes.mjs
