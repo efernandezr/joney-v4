@@ -47,4 +47,21 @@ describe("Builder safe-model intent matching", () => {
     );
     expect(result).toMatchObject({ count: 1, matchingIntentCount: 0 });
   });
+
+  it("matches the legacy title fallback case-insensitively with trimmed whitespace", () => {
+    const result = matchBuilderCmsSafeModelIntentEntries(
+      [entry({ title: "Hello World" })],
+      { exactTitle: "  hello world  " },
+    );
+    expect(result).toMatchObject({ count: 1 });
+    expect(result.matches.map((match) => match.id)).toEqual(["remote-1"]);
+  });
+
+  it("still misses a genuinely different title", () => {
+    const result = matchBuilderCmsSafeModelIntentEntries(
+      [entry({ title: "Hello World" })],
+      { exactTitle: "Hello Worldly" },
+    );
+    expect(result).toMatchObject({ count: 0 });
+  });
 });

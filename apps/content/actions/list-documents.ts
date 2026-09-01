@@ -76,7 +76,7 @@ export default defineAction({
       .string()
       .trim()
       .describe(
-        "Case-sensitive exact document title. Omit unless matching a known exact title.",
+        "Case-insensitive exact document title match (whitespace trimmed). Omit unless matching a known exact title. An empty result means no document matched the filters — never report a miss as missing access or permissions.",
       )
       .optional()
       .transform(normalizedTitleFilter),

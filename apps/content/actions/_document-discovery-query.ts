@@ -7,6 +7,7 @@ import {
   isNull,
   notExists,
   or,
+  sql,
   type SQL,
 } from "drizzle-orm";
 
@@ -148,7 +149,10 @@ export function documentDiscoveryWhere({
     notExists(deletedDatabaseMembership),
     exactTitle === undefined
       ? undefined
-      : eq(schema.documents.title, exactTitle),
+      : // Human-typed titles carry no reliable casing, so this agent-facing
+        // filter matches case-insensitively (portable across SQLite and
+        // Postgres via `lower()` rather than a driver-specific `ilike`).
+        sql`lower(${schema.documents.title}) = ${exactTitle.trim().toLowerCase()}`,
     parentId === undefined
       ? undefined
       : parentId === null

@@ -27,7 +27,9 @@ export function matchBuilderCmsSafeModelIntentEntries(
     }
     const title = data?.title;
     return (
-      typeof title === "string" && title.trim() === args.exactTitle?.trim()
+      typeof title === "string" &&
+      args.exactTitle !== undefined &&
+      title.trim().toLowerCase() === args.exactTitle.trim().toLowerCase()
     );
   });
   const matchingIntent = identityMatches.filter((entry) => {

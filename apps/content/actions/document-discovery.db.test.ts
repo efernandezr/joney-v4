@@ -13,6 +13,7 @@ const OWNER = "discovery-owner@example.com";
 const OUTSIDER = "discovery-outsider@example.com";
 const PARENT_ID = "bounded-discovery-parent";
 const SPACE_ID = "bounded-discovery-space";
+const CASING_DOCUMENT_ID = "bounded-discovery-hello-world";
 
 type Schema = typeof import("../server/db/schema.js");
 let getDb: () => any;
@@ -54,6 +55,21 @@ beforeAll(async () => {
     title: "Discovery parent",
     content: "",
     position: 0,
+    visibility: "private",
+    createdAt: now,
+    updatedAt: now,
+  });
+  // Deliberately top-level (not under PARENT_ID) so it does not perturb the
+  // PARENT_ID-scoped pagination totals asserted by the other tests below.
+  await getDb().insert(schema.documents).values({
+    id: CASING_DOCUMENT_ID,
+    spaceId: SPACE_ID,
+    ownerEmail: OWNER,
+    orgId: null,
+    parentId: null,
+    title: "Hello World",
+    content: "",
+    position: 1000,
     visibility: "private",
     createdAt: now,
     updatedAt: now,
@@ -166,6 +182,43 @@ describe("bounded document discovery", () => {
       hasMore: true,
       nextOffset: 1,
     });
+  });
+
+  it("matches exactTitle case-insensitively with trimmed whitespace, via both list and search", async () => {
+    for (const candidate of ["hello world", "HELLO WORLD", " Hello World "]) {
+      const listed = await asUser(OWNER, () =>
+        listDocuments.run({
+          exactTitle: candidate,
+          spaceId: SPACE_ID,
+          limit: 10,
+          offset: 0,
+        }),
+      );
+      expect(listed.documents.map((d) => d.id)).toEqual([CASING_DOCUMENT_ID]);
+
+      const searched = await asUser(OWNER, () =>
+        searchDocuments.run({
+          exactTitle: candidate,
+          spaceId: SPACE_ID,
+          limit: 10,
+          offset: 0,
+        }),
+      );
+      expect(searched.documents.map((d) => d.id)).toEqual([
+        CASING_DOCUMENT_ID,
+      ]);
+    }
+
+    const miss = await asUser(OWNER, () =>
+      listDocuments.run({
+        exactTitle: "Hello Worldly",
+        spaceId: SPACE_ID,
+        limit: 10,
+        offset: 0,
+      }),
+    );
+    expect(miss.documents).toEqual([]);
+    expect(miss.pagination.totalItems).toBe(0);
   });
 
   it("paginates body search and suppresses the private corpus for an outsider", async () => {
