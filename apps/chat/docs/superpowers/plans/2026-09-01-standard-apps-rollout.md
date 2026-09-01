@@ -130,7 +130,7 @@ Standard procedure for every app phase (referenced as "STD" below; app-specific 
 9. Regression smoke: `pnpm --filter chat test` still green; /chat opens a thread; /dispatch loads and its Apps page lists the new app.
 10. USER GATE: pause; Enrique tests hands-on and says go.
 11. Commit(s) on the branch; Enrique merges to main and pushes (prod deploy).
-12. Prod smoke: hard-reload; https://joney-v4.vercel.app/<id> loads (no ACL 403), sign-in session shared, one core record created via UI, agent replies; /chat unaffected. Build logs show the new app's `migrate:production` ran (Task 1.2).
+12. Prod smoke: hard-reload; FIRST open https://joney-v4.vercel.app/dispatch/apps once — Dispatch's registry sync auto-inserts the new app's `workspace_apps` row, and until it exists the 0.176 fail-closed ACL 403s every action with "You do not have access to this workspace app" (learned in Phase 2). Then https://joney-v4.vercel.app/<id> loads, sign-in session shared, one core record created via UI, agent replies; /chat unaffected. Build logs show the new app's `migrate:production` ran (Task 1.2).
 13. Update memory index line for the project (which apps are live).
 
 Anything that fails at step 12 gets fixed forward on a hotfix branch before the next phase starts.
