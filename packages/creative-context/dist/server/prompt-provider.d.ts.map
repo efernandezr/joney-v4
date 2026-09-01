@@ -1,0 +1,1 @@
+{"version":3,"file":"prompt-provider.d.ts","sourceRoot":"","sources":["../../src/server/prompt-provider.ts"],"names":[],"mappings":"AAIA,OAAO,KAAK,EAAE,eAAe,EAAE,MAAM,aAAa,CAAC;AACnD,OAAO,EAEL,KAAK,0BAA0B,EAChC,MAAM,oBAAoB,CAAC;AAW5B,wBAAgB,0BAA0B,CACxC,SAAS,EAAE,MAAM,EACjB,YAAY,EAAE,MAAM,EACpB,OAAO,EAAE,eAAe,GACvB,0BAA0B,CAmB5B;AAED,wBAAgB,qCAAqC,IAAI,MAAM,IAAI,CA4BlE"}

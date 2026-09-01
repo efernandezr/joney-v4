@@ -1,0 +1,21 @@
+import { ContextImportConnectorRegistry } from "./registry.js";
+export declare function registerDefaultCreativeContextConnectors(registry?: ContextImportConnectorRegistry): ContextImportConnectorRegistry;
+export declare function getCreativeContextConnectorRegistry(): ContextImportConnectorRegistry;
+export declare function createDefaultContextImportConnectorRegistry(): ContextImportConnectorRegistry;
+export { createDefaultContextConnectorExecutionContext, createWorkspaceConnectionResolver, type CreateContextConnectorExecutionContextOptions, } from "./context.js";
+export { FigmaContextConnector, figmaRecommendedFileKeys } from "./figma.js";
+export { fetchFigmaNativeContextItems, MAX_INLINE_NATIVE_CODE_BYTES, nativeFidelityReportFromEntries, } from "./figma-native.js";
+export { GOOGLE_SLIDES_CONTEXT_OAUTH_SCOPES, GoogleSlidesContextConnector, googleSlidesRecommendedPresentationIds, } from "./google-slides.js";
+export { compileGoogleSlidesPresentation, type CompiledGoogleSlide, type CompiledGoogleSlideChild, type GoogleSlidesNativeCompileOptions, type SlidesNativeAssetRequest, type SlidesNativeBounds, type SlidesNativeFallbackRequest, } from "./google-slides-native.js";
+export { ManualContextConnector } from "./manual.js";
+export { NotionContextConnector, notionRecommendedRootPageIds, } from "./notion.js";
+export { parseUploadedDocument, type ParseDocumentInput, type ParsedDocument, } from "./document-parser.js";
+export { ContextImportConnectorRegistry } from "./registry.js";
+export { LayeredRenderedPageProvider, type LayeredRenderedPageProviderOptions, type RenderedPageMethod, type RenderedPageProvider, type RenderedPageRequest, type RenderedPageResult, } from "./rendered-page.js";
+export { brandKitDataFromExtraction, buildDesignMarkdown, extractRenderedDesignSystemFromUrl, styleBriefFromRenderedDesign, type ExtractRenderedDesignOptions, type RenderedDesignExtraction, type RenderedDesignExtractionStatus, } from "./rendered-design.js";
+export { recommendContextRoots, type ContextRootRecommendation, type ContextRootRecommendationProvider, } from "./recommendations.js";
+export { smartDefaultExternalIds } from "./smart-defaults.js";
+export { UploadContextConnector } from "./upload.js";
+export { WebsiteContextConnector } from "./website.js";
+export type { ContextConnectorExecutionContext, ContextConnectorFetchRequest, ContextConnectorFetchResult, ContextConnectorInventoryItem, ContextConnectorInventoryPage, ContextConnectorInventoryRequest, ContextConnectorKind, ContextImportConnector, ContextImportConnectorSummary, ContextUploadContent, } from "./types.js";
+//# sourceMappingURL=index.d.ts.map

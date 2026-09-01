@@ -1,0 +1,160 @@
+import type { BrandDnaVersion, BrandProfile, ContextDetail, ContextJob, ContextReviewItem } from "../types.js";
+export declare function sanitizePublicMetadata(value: unknown): unknown;
+export declare function sanitizePublicString(value: string): string;
+export declare function serializePublicContextDetail(context: ContextDetail): {
+    item: {
+        id: string;
+        sourceId: string;
+        externalId: string;
+        kind: string;
+        title: string;
+        mimeType: string | null;
+        currentVersionId: string;
+        status: import("../types.js").ContextItemStatus;
+        upstreamAccess: import("../types.js").UpstreamAccess;
+        curationStatus: import("../types.js").ContextCurationStatus;
+        curationRank: import("../types.js").ContextCurationRank;
+        starred: boolean;
+        inventoryState: "discovered" | "available" | "removed" | "error";
+        indexState: "pending" | "indexed" | "stale" | "error";
+        tags: string[];
+        colors: string[];
+        sortOrder: number;
+        parentItemId: string | null;
+        createdAt: string;
+        updatedAt: string;
+        canonicalUrl: string | null;
+        provenance: unknown;
+        hasThumbnail: boolean;
+    };
+    version: {
+        id: string;
+        itemId: string;
+        versionNumber: number;
+        contentHash: string;
+        title: string;
+        content: string;
+        summary: string | null;
+        mimeType: string | null;
+        sourceModifiedAt: string | null;
+        sourceVersion: string | null;
+        parseStatus: "pending" | "parsed" | "failed";
+        parseError: string | null;
+        createdAt: string;
+        hasRawSnapshot: boolean;
+        metadata: unknown;
+    };
+    chunks: {
+        id: string;
+        itemId: string;
+        itemVersionId: string;
+        ordinal: number;
+        kind: string;
+        text: string;
+        startOffset: number | null;
+        endOffset: number | null;
+        tokenCount: number | null;
+        metadata: unknown;
+    }[];
+    media: {
+        id: string;
+        itemId: string;
+        itemVersionId: string;
+        kind: import("../types.js").ContextMediaInput["kind"];
+        mimeType: string | null;
+        accessMode: "public" | "private" | "expiring";
+        altText: string | null;
+        caption: string | null;
+        captionStatus: "pending" | "complete" | "failed" | "not-needed";
+        ocrText: string | null;
+        palette: string[];
+        contentHash: string | null;
+        width: number | null;
+        height: number | null;
+        durationMs: number | null;
+        url: string;
+        hasOriginal: boolean;
+        metadata: unknown;
+    }[];
+    edges: {
+        id: string;
+        fromItemId: string;
+        fromItemVersionId: string;
+        toItemId: string | null;
+        toItemVersionId: string | null;
+        toExternalId: string | null;
+        relation: string;
+        metadata: unknown;
+    }[];
+};
+export declare function serializePublicBrandProfile(input: {
+    profile: BrandProfile | null;
+    dna: BrandDnaVersion | null;
+    versions: BrandDnaVersion[];
+}): {
+    profile: BrandProfile | null;
+    dna: {
+        id: string;
+        profileId: string;
+        versionNumber: number;
+        contentHash: string;
+        status: "draft" | "proposed" | "published";
+        evidence: Array<{
+            itemId: string;
+            itemVersionId: string;
+        }>;
+        createdAt: string;
+        payload: unknown;
+    } | null;
+    versions: {
+        id: string;
+        profileId: string;
+        versionNumber: number;
+        contentHash: string;
+        status: "draft" | "proposed" | "published";
+        evidence: Array<{
+            itemId: string;
+            itemVersionId: string;
+        }>;
+        createdAt: string;
+        payload: unknown;
+    }[];
+};
+export declare function serializePublicJob(job: ContextJob | null): {
+    id: string;
+    sourceId: string | null;
+    kind: import("../types.js").ContextJobKind;
+    status: import("../types.js").ContextJobStatus;
+    mode: import("../types.js").ContextImportMode | null;
+    progressCurrent: number;
+    progressTotal: number | null;
+    attempts: number;
+    nextResumeAt: string | null;
+    result: unknown;
+    error: {} | null;
+    createdAt: string;
+    startedAt: string | null;
+    completedAt: string | null;
+} | null;
+export declare function serializePublicReviewItems(items: ContextReviewItem[]): {
+    id: string;
+    currentVersionId: string;
+    sourceId: string;
+    externalId: string;
+    kind: string;
+    title: string;
+    canonicalUrl: string | null;
+    upstreamAccess: import("../types.js").UpstreamAccess;
+    curationStatus: import("../types.js").ContextCurationStatus;
+    curationRank: import("../types.js").ContextCurationRank;
+    starred: boolean;
+    status: import("../types.js").ContextItemStatus;
+    inventoryState: "discovered" | "available" | "removed" | "error";
+    tags: string[];
+    colors: string[];
+    parentItemId: string | null;
+    updatedAt: string;
+    hasThumbnail: boolean;
+    provenance: unknown;
+}[];
+//# sourceMappingURL=public-serialization.d.ts.map

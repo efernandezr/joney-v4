@@ -1,0 +1,1 @@
+{"version":3,"file":"media-url.d.ts","sourceRoot":"","sources":["../src/media-url.ts"],"names":[],"mappings":"AAAA,eAAO,MAAM,4BAA4B,0CACA,CAAC;AAE1C,wBAAgB,uBAAuB,CAAC,KAAK,EAAE;IAC7C,OAAO,CAAC,EAAE,MAAM,CAAC;IACjB,MAAM,CAAC,EAAE,MAAM,CAAC;IAChB,aAAa,CAAC,EAAE,MAAM,CAAC;CACxB,GAAG,MAAM,CAST"}
