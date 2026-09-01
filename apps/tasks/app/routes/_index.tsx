@@ -1,3 +1,4 @@
+import { getConfiguredAppBasePath } from "@agent-native/core/server";
 import { withSsrHtmlContentType } from "@agent-native/core/shared";
 import { redirect } from "react-router";
 
@@ -15,7 +16,12 @@ export function meta() {
 }
 
 export function loader() {
-  return withSsrHtmlContentType(redirect("/tasks"));
+  // Under a workspace mount the app's own base path IS "/tasks", and the
+  // gateway's Location-prefix rewrite treats a bare "/tasks" as already
+  // prefixed — an infinite redirect loop. Emit the fully-prefixed path.
+  return withSsrHtmlContentType(
+    redirect(`${getConfiguredAppBasePath()}/tasks`),
+  );
 }
 
 export default function IndexRedirect() {
