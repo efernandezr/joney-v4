@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "agent-native dev",
+    "dev": "node scripts/doctor-workspace-env.mjs && agent-native dev",
     "build": "pnpm -r build",
     "doctor": "agent-native doctor",
     "agent-native:doctor": "agent-native doctor",

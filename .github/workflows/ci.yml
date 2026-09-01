@@ -1,0 +1,50 @@
+# CI mirrors what Vercel does from a fresh clone, so gitignored-but-required
+# files (the creative-context dist incident) and platform limits (the
+# 2048-route incident) fail here instead of on the production deploy.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Typecheck & test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      # Reads the pnpm version from package.json#packageManager.
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r --if-present run typecheck
+      - run: pnpm -r --if-present run test
+
+  build:
+    name: Vercel-parity build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Same commands as vercel.json's buildCommand. Production migrations are
+      # gated on VERCEL_ENV=production there and are intentionally not run in
+      # CI. compress-vercel-routes exits non-zero above Vercel's 2048-route
+      # deployment limit.
+      - run: npx @agent-native/core@latest deploy --preset vercel --build-only
+      - run: node scripts/compress-vercel-routes.mjs
