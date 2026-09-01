@@ -5,7 +5,7 @@ import {
   repairSettingsPathname,
   resolveSettingsTab,
   settingsTabPath,
-} from "../app/lib/settings-tab-routing";
+} from "@joney-ai/shared/client";
 
 const KNOWN = new Set([
   "general",

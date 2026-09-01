@@ -20,7 +20,7 @@ import {
   repairSettingsPathname,
   resolveSettingsTab,
   settingsTabPath,
-} from "@/lib/settings-tab-routing";
+} from "@joney-ai/shared/client";
 
 import changelog from "../../CHANGELOG.md?raw";
 

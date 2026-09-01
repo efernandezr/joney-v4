@@ -1,14 +1,14 @@
 /**
- * Base-path-aware settings tab routing.
+ * Base-path-aware settings tab routing, shared by every workspace app.
  *
- * Core 0.159.2's SettingsTabsPage syncs tabs to the URL with a raw
- * `history.pushState("/settings/<tab>")`, which drops the workspace mount
- * prefix (/chat) and breaks every URL-derived link built afterwards (e.g. the
- * MCP OAuth start endpoint). The settings route therefore drives the component
- * in controlled mode: React Router owns tab <-> URL sync (basename-aware),
- * and these helpers translate between the route splat and the framework's
- * tab ids using the same normalization rules as the framework's
- * `buildSettingsRoute`/`normalizeTabId`.
+ * Core's SettingsTabsPage (through at least 0.176.1) syncs tabs to the URL
+ * with a raw `history.pushState("/settings/<tab>")`, which drops the
+ * workspace mount prefix (/<app>) and breaks every URL-derived link built
+ * afterwards (e.g. the MCP OAuth start endpoint). Each app's settings route
+ * therefore drives the component in controlled mode: React Router owns
+ * tab <-> URL sync (basename-aware), and these helpers translate between the
+ * route splat and the framework's tab ids using the same normalization rules
+ * as the framework's `buildSettingsRoute`/`normalizeTabId`.
  */
 
 /** Mirrors the framework's normalizeTabId aliases (navigation/index.js). */
