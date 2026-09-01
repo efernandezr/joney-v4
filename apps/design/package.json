@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "agent-native dev --inspect",
-    "build": "agent-native build",
+    "build": "pnpm run codegen:bridge && agent-native build",
     "start": "agent-native start",
     "test": "vitest --run",
     "typecheck": "agent-native typecheck && pnpm exec tsc --noEmit -p app/components/design/bridge/tsconfig.json",

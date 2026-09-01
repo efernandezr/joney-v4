@@ -13,6 +13,14 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Dummy values so the framework's production-config validation passes in CI
+# (agent-native typecheck/build load app config and hard-fail without them).
+# Nothing is deployed or connected from CI; real values live only in Vercel.
+env:
+  BETTER_AUTH_SECRET: ci-dummy-better-auth-secret-0000000000000000
+  A2A_SECRET: ci-dummy-a2a-secret-00000000000000000000000000
+  DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/ci_build_only
+
 jobs:
   test:
     name: Typecheck & test

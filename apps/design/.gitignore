@@ -48,4 +48,6 @@ data/e2e.db
 data/e2e.db-*
 .agent-native/
 
-.generated/
+# .generated/bridge is COMMITTED (Vercel/CI fresh clones need it — same lesson
+# as packages/creative-context/dist) and also regenerated on every build via
+# the codegen:bridge step chained into the build script.
