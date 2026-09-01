@@ -5,3 +5,9 @@ export {
   resolveSettingsTab,
   settingsTabPath,
 } from "./settings-routing";
+export {
+  currentWorkspaceAppId,
+  useWorkspaceAppLinks,
+  type UseWorkspaceAppLinksResult,
+  type WorkspaceAppLink,
+} from "./workspace-apps-nav";

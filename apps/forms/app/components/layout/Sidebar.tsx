@@ -10,7 +10,9 @@ import { openCommandMenu } from "@agent-native/core/client/navigation";
 import { OrgSwitcher } from "@agent-native/core/client/org";
 import { FeedbackButton } from "@agent-native/core/client/ui";
 import { SidebarFooterActions } from "@agent-native/toolkit/app-shell";
+import { useWorkspaceAppLinks } from "@joney-ai/shared/client";
 import {
+  IconApps,
   IconArrowUp,
   IconPlus,
   IconLoader2,
@@ -53,6 +55,7 @@ export function Sidebar() {
   const navigate = useNavigate();
   const t = useT();
   const createForm = useCreateForm();
+  const { apps: workspaceApps } = useWorkspaceAppLinks();
   const { send } = useSendToAgentChat();
   const promptRun = useAgentPromptRun({
     staleMessage: t("sidebar.formGenerationStale"),
@@ -485,6 +488,26 @@ export function Sidebar() {
             {newFormButton}
             {newFormPopover}
           </Popover>
+
+          {workspaceApps.length > 0 && (
+            <div className="mt-3 grid min-w-0 gap-1">
+              <p className="px-3 pb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70">
+                Apps
+              </p>
+              {workspaceApps.map((app) => (
+                <a
+                  key={app.id}
+                  href={app.href}
+                  className="forms-sidebar-nav-item flex min-h-[44px] w-full min-w-0 max-w-full items-center gap-2.5 overflow-hidden rounded-lg px-3 py-2 text-sm text-muted-foreground active:scale-[0.96] transition-[background-color,box-shadow,color,transform] hover:bg-accent/50 hover:text-foreground"
+                >
+                  <IconApps className="h-4 w-4 shrink-0" />
+                  <span className="min-w-0 flex-1 basis-0 truncate">
+                    {app.name}
+                  </span>
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </ScrollArea>
 

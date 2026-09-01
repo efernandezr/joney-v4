@@ -32,6 +32,13 @@
     "prepare": "tsc"
   },
   "devDependencies": {
+    "@agent-native/core": "0.176.1",
+    "@types/react": "^19.2.14",
+    "react": "^19.2.7",
     "typescript-7": "npm:typescript@^7.0.2"
+  },
+  "peerDependencies": {
+    "@agent-native/core": "*",
+    "react": "^19.0.0"
   }
 }

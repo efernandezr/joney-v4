@@ -13,7 +13,9 @@ import {
   ChatHistoryRail,
   type ChatHistoryItem,
 } from "@agent-native/toolkit/chat-history";
+import { useWorkspaceAppLinks } from "@joney-ai/shared/client";
 import {
+  IconApps,
   IconBrain,
   IconFileCode,
   IconLayoutSidebarLeftCollapse,
@@ -139,6 +141,48 @@ function threadIdFromPath(pathname: string) {
 
 function chatThreadPath(threadId: string) {
   return `/chat/${encodeURIComponent(threadId)}`;
+}
+
+function WorkspaceAppsSection({
+  collapsed,
+  navClass,
+}: {
+  collapsed: boolean;
+  navClass: (state: { isActive: boolean }) => string;
+}) {
+  const { apps } = useWorkspaceAppLinks();
+  if (apps.length === 0) return null;
+  return (
+    <div className={cn("mt-4 grid", collapsed ? "gap-0" : "gap-1")}>
+      {!collapsed && (
+        <p className="px-3 pb-1 text-[11px] font-medium uppercase tracking-wide text-sidebar-foreground/50">
+          Apps
+        </p>
+      )}
+      {apps.map((app) => {
+        const link = (
+          <a
+            href={app.href}
+            className={navClass({ isActive: false })}
+            aria-label={collapsed ? app.name : undefined}
+          >
+            <IconApps className="size-4 shrink-0" />
+            <span className={collapsed ? "sr-only" : "truncate"}>
+              {app.name}
+            </span>
+          </a>
+        );
+        return collapsed ? (
+          <Tooltip key={app.id}>
+            <TooltipTrigger asChild>{link}</TooltipTrigger>
+            <TooltipContent side="right">{app.name}</TooltipContent>
+          </Tooltip>
+        ) : (
+          <div key={app.id}>{link}</div>
+        );
+      })}
+    </div>
+  );
 }
 
 function ChatThreadsSection({ open }: { open: boolean }) {
@@ -489,6 +533,7 @@ export function Sidebar({
             );
           })}
         </div>
+        <WorkspaceAppsSection collapsed={collapsed} navClass={navClass} />
       </nav>
 
       <div className={cn("mt-auto shrink-0", collapsed && "py-2")}>
