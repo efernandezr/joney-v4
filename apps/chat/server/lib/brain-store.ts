@@ -67,6 +67,22 @@ export const runBrainMigrations = runMigrations(
       CREATE INDEX IF NOT EXISTS brain_entries_owner_idx
         ON brain_entries (owner_email, status, updated_at);`,
     },
+    // v1's INTEGER promotable becomes BIGINT on Postgres, but the portable
+    // `integer(..., { mode: "boolean" })` schema helper maps to a BOOLEAN
+    // column there — so every insert sent a boolean into a bigint column and
+    // Postgres rejected it (first prod Brain write, 2026-09-01). Same disease
+    // and cure as the tasks template's v8 migration. SQLite keeps its INTEGER
+    // boolean representation and records this dialect-gated entry without
+    // running SQL.
+    {
+      version: 2,
+      name: "joney-brain-promotable-boolean",
+      sql: {
+        postgres: `ALTER TABLE brain_entries ALTER COLUMN promotable DROP DEFAULT;
+ALTER TABLE brain_entries ALTER COLUMN promotable TYPE boolean USING (LOWER(promotable::text) IN ('1', 'true', 't', 'yes'));
+ALTER TABLE brain_entries ALTER COLUMN promotable SET DEFAULT false`,
+      },
+    },
   ],
   { table: "joney_brain_migrations" },
 );
