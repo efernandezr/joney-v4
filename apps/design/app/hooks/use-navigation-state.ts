@@ -238,8 +238,21 @@ export function useNavigationState(enabled = true) {
     }
   }, [browserTabId, enabled, location.pathname]);
 
-  useAgentRouteState<NavigationState>({
-    browserTabId,
+  // Dev-SSR guard for a framework module-duality bug: in the workspace dev
+  // server, the editor route's SSR graph loads a second copy of
+  // @agent-native/core's client bundle through Node's loader (production
+  // react-router conditions), so core's useLocation cannot see the app
+  // Router's context and every /design/:id SSR dies with "useLocation() may
+  // be used only in the context of a <Router>". The app's own react-router
+  // hooks above are unaffected. Swallow the failure during SSR only — the
+  // browser has a single module graph, so agent context-awareness is fully
+  // functional after hydration. Upstream-report candidate; remove when core
+  // keeps its client bundle on one react-router instance in workspace dev.
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- called
+    // unconditionally; the try only intercepts the SSR context failure above.
+    useAgentRouteState<NavigationState>({
+      browserTabId,
     getNavigationState: ({ pathname, search }) => {
       const state: NavigationState = { view: "list" };
       const searchParams = new URLSearchParams(search);
@@ -318,5 +331,10 @@ export function useNavigationState(enabled = true) {
       }
     },
     enabled,
-  });
+    });
+  } catch (error) {
+    // Only the server render may swallow this; in the browser a Router
+    // context failure is a real bug and must surface.
+    if (typeof window !== "undefined") throw error;
+  }
 }
