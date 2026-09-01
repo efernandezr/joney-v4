@@ -12,7 +12,7 @@ const entryType = z.enum(["fact", "preference", "lesson", "note"]);
 
 export default defineAction({
   description:
-    "Save an entry the member explicitly wants in their private brain (status kept). For memories YOU infer from conversation, use propose-memory instead.",
+    "Save an entry the member explicitly wants in their private brain (status kept). The member's Brain / 'My Brain' is this app's built-in memory store: when the user asks to save something to their Brain, call this action — never delegate to a connected agent or app named Brain. For memories YOU infer from conversation, use propose-memory instead.",
   schema: z.object({
     type: entryType,
     title: z.string().min(1).max(120),
