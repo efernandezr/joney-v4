@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npx @agent-native/core@latest deploy --preset vercel --build-only && if [ \"$VERCEL_ENV\" = \"production\" ]; then pnpm -r --if-present run migrate:production; fi",
+  "buildCommand": "npx @agent-native/core@latest deploy --preset vercel --build-only && if [ \"$VERCEL_ENV\" = \"production\" ]; then pnpm -r --workspace-concurrency=1 --if-present run migrate:production; fi",
   "installCommand": "pnpm install",
   "framework": null
 }
